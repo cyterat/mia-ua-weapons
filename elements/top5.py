@@ -1,9 +1,17 @@
 import streamlit as st
 import pandas as pd
 import numpy as np
+import os.path, time
 from PIL import Image
 import matplotlib.pyplot as plt
 from matplotlib.offsetbox import (OffsetImage, AnchoredOffsetbox)
+
+# File modification year
+def modification_date(file):
+    t = os.path.getmtime(file)
+    year,month,day,hour,minute,second=time.localtime(t)[:-3]
+    date = f"{year}"
+    return date
 
 def top_5():
     colors=['#00595e','#faffff']
@@ -86,8 +94,10 @@ def top_5():
         color='#dedede'
     )
 
+    current_yr = int(modification_date('assets/models/country-stats.parquet.gzip'))
+
     plt.annotate(
-        'Chart: cyterat ⋅ Source: MIA of Ukraine ⋅ 2022',
+        f'Chart: cyterat ⋅ Source: MIA of Ukraine ⋅ {current_yr}',
         xy=(3.3, 1),
         xytext=(
             totals.max()*-0.45, 

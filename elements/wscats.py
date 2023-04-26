@@ -2,7 +2,16 @@ import streamlit as st
 import pandas as pd
 import plotly.graph_objects as go
 from plotly.subplots import make_subplots
+import os.path, time
 
+# File modification year
+def modification_date(file):
+    t = os.path.getmtime(file)
+    year,month,day,hour,minute,second=time.localtime(t)[:-3]
+    date = f"{year}"
+    return date
+
+current_yr = int(modification_date('assets/models/yr-weekly-scats.parquet.gzip'))
 
 def yr_weekly_scats():
     # Colors
@@ -14,7 +23,7 @@ def yr_weekly_scats():
     # Total records
     gr_w_scats = w_scats.groupby(['date'])['frequency'].sum().reset_index()
 
-    fig = make_subplots(rows=3, cols=1, vertical_spacing=0.125, subplot_titles=("<b>Weekly Totals 1991-2022</b>", "<b>Weekly Totals 1991-2022</b> (log y)", f"<b>Weekly Loss and Theft Totals 1991-2022</b> (log y)"))
+    fig = make_subplots(rows=3, cols=1, vertical_spacing=0.125, subplot_titles=(f"<b>Weekly Totals 1991-{current_yr}</b>", f"<b>Weekly Totals 1991-{current_yr}</b> (log y)", f"<b>Weekly Loss and Theft Totals 1991-{current_yr}</b> (log y)"))
 
     gcolor="#757575"
 
@@ -49,7 +58,7 @@ def yr_weekly_scats():
         hovertemplate=htext
     ), row=2, col=1)
 
-    fig.update_xaxes(row=2, col=1, range=['1991','2023'], tickfont_size=14, gridcolor=gcolor)
+    fig.update_xaxes(row=2, col=1, range=['1991',f'{current_yr+1}'], tickfont_size=14, gridcolor=gcolor)
     fig.update_yaxes(title_text="Number of Records (log)", type="log", showexponent='all', exponentformat='power', row=2, col=1, tickfont_size=13, gridcolor=gcolor, dtick=1, title_standoff=5, title_font = {"size": 13, "family":"Verdana, sans-serif"})
 
 

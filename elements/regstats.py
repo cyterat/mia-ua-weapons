@@ -38,8 +38,8 @@ def region_population_end2021(region):
 def region_total_end2021(region):
     df = region_tl[(region_tl['region']==region)]
     
-    #current_yr = int(modification_date('assets/models/country-stats.parquet.gzip'))
-    current_yr = 2022
+    current_yr = int(modification_date('assets/models/country-stats.parquet.gzip'))
+    #current_yr = 2022
     previous_yr = current_yr-1
 
     previous_total = int(df[df['date'].dt.year==previous_yr]['total'])
@@ -57,7 +57,7 @@ def region_total_end2021(region):
         sign='+'
 
     return st.markdown(
-        f"<span title='Number of records in {modification_date('assets/models/country-stats.parquet.gzip')} compared to previous year'><small>Records<br>in 2022</small></span><br><font size='5.5'>{current_total:,}</font><br><font size='2'><span style='color: {delta_color}'>{sign}{yr_diff:,}</span></font>", unsafe_allow_html=True)
+        f"<span title='Number of records in {current_yr} compared to previous year'><small>Records<br>in {current_yr}</small></span><br><font size='5.5'>{current_total:,}</font><br><font size='2'><span style='color: {delta_color}'>{sign}{yr_diff:,}</span></font>", unsafe_allow_html=True)
 
 
 #Yearly totals trend in a region
