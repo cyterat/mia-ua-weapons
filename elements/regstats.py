@@ -88,7 +88,7 @@ def region_yr_totals_linegarph(region):
             showticklabels=True,
             gridcolor='#484848',
             tickmode='array',
-            tickvals=list(df["date"].dt.year)[::6],
+            tickvals=list(df["date"].dt.year)[::7],
             tickformat='%Y',
         ),
         yaxis = dict(
@@ -149,9 +149,11 @@ def region_maxmin(region):
 #Last 10 years trend of Theft and Loss cases in a region
 def region_yr_totals_linegrph2012(region):
 
-## Plotly interactive chart
+    current_yr = int(modification_date('assets/models/country-stats.parquet.gzip'))
+
+    ## Plotly interactive chart
     df = region_tl[
-            (region_tl['date']>=str(2012))&
+            (region_tl['date']>=str(current_yr-10))&
             (region_tl['region']==str(region))
         ]
 
