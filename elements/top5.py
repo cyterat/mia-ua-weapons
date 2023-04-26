@@ -77,7 +77,7 @@ def top_5():
         pad=15, 
         fontdict=dict(
             fontsize=12, 
-            fontweight='bold', 
+            #fontweight='bold', 
             color='#dedede'
         )
     )
