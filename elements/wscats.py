@@ -43,7 +43,7 @@ def yr_weekly_scats():
         hovertemplate=htext
     ), row=1, col=1)
 
-    fig.update_xaxes(row=1, col=1, range=['1991','2023'], tickfont_size=14, gridcolor=gcolor)
+    fig.update_xaxes(row=1, col=1, range=['1991',f'{current_yr+1}'], tickfont_size=14, gridcolor=gcolor)
     fig.update_yaxes(title_text="Number of Records", row=1, col=1, tickfont_size=13, range=[0,150000], gridcolor=gcolor, zeroline=False, title_standoff=5, title_font = {"size": 13, "family":"Verdana, sans-serif"})
 
 
@@ -83,7 +83,7 @@ def yr_weekly_scats():
         hovertemplate=lhtex
     ), row=3, col=1)
 
-    fig.update_xaxes(row=3, col=1, range=['1991','2023'], tickfont_size=14, gridcolor=gcolor)
+    fig.update_xaxes(row=3, col=1, range=['1991',f'{current_yr+1}'], tickfont_size=14, gridcolor=gcolor)
     fig.update_yaxes(title_text="Number of Records (log)", type="log", showexponent='all', exponentformat='power', row=3, col=1, tickfont_size=13, gridcolor=gcolor, dtick=1, title_standoff=5, title_font = {"size": 13, "family":"Verdana, sans-serif"})
 
     #Settings
