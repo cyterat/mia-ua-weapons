@@ -73,7 +73,7 @@ def top_5():
     plt.yticks(color='#dedede', size=10)
 
     plt.title(
-        'Top 5 Regions of Ukraine\nwith the Largest Total Number of\nWeapons Theft&Loss Cases', 
+        'Top 5 Regions of Ukraine\nwith the Largest Number\nof Weapons Theft and Loss Cases', 
         pad=15, 
         fontdict=dict(
             fontsize=12, 
