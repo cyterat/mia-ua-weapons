@@ -4,121 +4,203 @@ import plotly.graph_objects as go
 from plotly.subplots import make_subplots
 import os.path, time
 
+
 # File modification year
 def modification_date(file):
     t = os.path.getmtime(file)
-    year,month,day,hour,minute,second=time.localtime(t)[:-3]
+    year, month, day, hour, minute, second = time.localtime(t)[:-3]
     date = f"{year}"
     return date
 
-current_yr = int(modification_date('assets/models/yr-weekly-scats.parquet.gzip'))
+
+current_yr = int(modification_date("assets/models/yr-weekly-scats.parquet.gzip"))
+
 
 def yr_weekly_scats():
     # Colors
-    favcol = ["#00383b","#00595e","#009ba1","#00CCD3", "#faffff"]
+    favcol = ["#00383b", "#00595e", "#009ba1", "#00CCD3", "#faffff"]
 
     ## Data
     # Theft and Loss
-    w_scats = pd.read_parquet('assets/models/yr-weekly-scats.parquet.gzip')
+    w_scats = pd.read_parquet("assets/models/yr-weekly-scats.parquet.gzip")
     # Total records
-    gr_w_scats = w_scats.groupby(['date'])['frequency'].sum().reset_index()
+    gr_w_scats = w_scats.groupby(["date"])["frequency"].sum().reset_index()
 
-    fig = make_subplots(rows=3, cols=1, vertical_spacing=0.125, subplot_titles=(f"<b>Weekly Totals 1991-{current_yr}</b>", f"<b>Weekly Totals 1991-{current_yr}</b> (log y)", f"<b>Weekly Loss and Theft Totals 1991-{current_yr}</b> (log y)"))
+    fig = make_subplots(
+        rows=3,
+        cols=1,
+        vertical_spacing=0.125,
+        subplot_titles=(
+            f"<b>Weekly Totals 1991-{current_yr}</b>",
+            f"<b>Weekly Totals 1991-{current_yr}</b> (log y)",
+            f"<b>Weekly Loss and Theft Totals 1991-{current_yr}</b> (log y)",
+        ),
+    )
 
-    gcolor="#757575"
+    gcolor = "#757575"
 
-    htext='<b>Records:</b> %{y:,.0f}'+'<br>Month: %{x|%B, %d}'+'<br>Year: %{x|%Y}'
-    lhtex='<b>Loss:</b> %{y:,.0f}'+'<br>Month: %{x|%B, %d}'+'<br>Year: %{x|%Y}'
-    thtex='<b>Theft:</b> %{y:,.0f}'+'<br>Month: %{x|%B, %d}'+'<br>Year: %{x|%Y}'
-
+    htext = "<b>Records:</b> %{y:,.0f}" + "<br>Month: %{x|%B, %d}" + "<br>Year: %{x|%Y}"
+    lhtex = "<b>Loss:</b> %{y:,.0f}" + "<br>Month: %{x|%B, %d}" + "<br>Year: %{x|%Y}"
+    thtex = "<b>Theft:</b> %{y:,.0f}" + "<br>Month: %{x|%B, %d}" + "<br>Year: %{x|%Y}"
 
     # First plot
-    fig.append_trace(go.Scattergl(
-        x=gr_w_scats["date"],
-        y=gr_w_scats["frequency"],
-        mode="markers",
-        marker_color=favcol[3],
-        marker_size=5,
-        name="Weekly Totals",
-        hovertemplate=htext
-    ), row=1, col=1)
+    fig.append_trace(
+        go.Scattergl(
+            x=gr_w_scats["date"],
+            y=gr_w_scats["frequency"],
+            mode="markers",
+            marker_color=favcol[3],
+            marker_size=5,
+            name="Weekly Totals",
+            hovertemplate=htext,
+        ),
+        row=1,
+        col=1,
+    )
 
-    fig.update_xaxes(row=1, col=1, range=['1991',f'{current_yr+1}'], tickfont_size=14, gridcolor=gcolor)
-    fig.update_yaxes(title_text="Number of Records", row=1, col=1, tickfont_size=13, range=[0,150000], gridcolor=gcolor, zeroline=False, title_standoff=5, title_font = {"size": 13, "family":"Verdana, sans-serif"})
-
+    fig.update_xaxes(
+        row=1,
+        col=1,
+        range=["1991", f"{current_yr+1}"],
+        tickfont_size=14,
+        gridcolor=gcolor,
+    )
+    fig.update_yaxes(
+        title_text="Number of Records",
+        row=1,
+        col=1,
+        tickfont_size=13,
+        range=[0, 150000],
+        gridcolor=gcolor,
+        zeroline=False,
+        title_standoff=5,
+        title_font={"size": 13, "family": "Verdana, sans-serif"},
+    )
 
     # Second plot
-    fig.add_trace(go.Scattergl(
-        x=gr_w_scats["date"],
-        y=gr_w_scats["frequency"],
-        mode="markers",
-        marker_size=5,
-        marker_color=favcol[3],
-        name="Weekly Totals (log y)",
-        hovertemplate=htext
-    ), row=2, col=1)
+    fig.add_trace(
+        go.Scattergl(
+            x=gr_w_scats["date"],
+            y=gr_w_scats["frequency"],
+            mode="markers",
+            marker_size=5,
+            marker_color=favcol[3],
+            name="Weekly Totals (log y)",
+            hovertemplate=htext,
+        ),
+        row=2,
+        col=1,
+    )
 
-    fig.update_xaxes(row=2, col=1, range=['1991',f'{current_yr+1}'], tickfont_size=14, gridcolor=gcolor)
-    fig.update_yaxes(title_text="Number of Records (log)", type="log", showexponent='all', exponentformat='power', row=2, col=1, tickfont_size=13, gridcolor=gcolor, dtick=1, title_standoff=5, title_font = {"size": 13, "family":"Verdana, sans-serif"})
-
+    fig.update_xaxes(
+        row=2,
+        col=1,
+        range=["1991", f"{current_yr+1}"],
+        tickfont_size=14,
+        gridcolor=gcolor,
+    )
+    fig.update_yaxes(
+        title_text="Number of Records (log)",
+        type="log",
+        showexponent="all",
+        exponentformat="power",
+        row=2,
+        col=1,
+        tickfont_size=13,
+        gridcolor=gcolor,
+        dtick=1,
+        title_standoff=5,
+        title_font={"size": 13, "family": "Verdana, sans-serif"},
+    )
 
     # Third plot
-    fig.add_trace(go.Scattergl(
-        x=w_scats[w_scats['report']=='Theft']["date"],
-        y=w_scats[w_scats['report']=='Theft']["frequency"],
-        mode="markers",
-        marker_size=5,
-        marker_color=favcol[4],
-        name="Theft",
-        hovertemplate=thtex
-    ), row=3, col=1)
+    fig.add_trace(
+        go.Scattergl(
+            x=w_scats[w_scats["report"] == "Theft"]["date"],
+            y=w_scats[w_scats["report"] == "Theft"]["frequency"],
+            mode="markers",
+            marker_size=5,
+            marker_color=favcol[4],
+            name="Theft",
+            hovertemplate=thtex,
+        ),
+        row=3,
+        col=1,
+    )
 
-    fig.add_trace(go.Scattergl(
-        x=w_scats[w_scats['report']=='Loss']["date"],
-        y=w_scats[w_scats['report']=='Loss']["frequency"],
-        mode="markers",
-        marker_size=5,
-        marker_color=favcol[1],
-        name="Loss",
-        hovertemplate=lhtex
-    ), row=3, col=1)
+    fig.add_trace(
+        go.Scattergl(
+            x=w_scats[w_scats["report"] == "Loss"]["date"],
+            y=w_scats[w_scats["report"] == "Loss"]["frequency"],
+            mode="markers",
+            marker_size=5,
+            marker_color=favcol[1],
+            name="Loss",
+            hovertemplate=lhtex,
+        ),
+        row=3,
+        col=1,
+    )
 
-    fig.update_xaxes(row=3, col=1, range=['1991',f'{current_yr+1}'], tickfont_size=14, gridcolor=gcolor)
-    fig.update_yaxes(title_text="Number of Records (log)", type="log", showexponent='all', exponentformat='power', row=3, col=1, tickfont_size=13, gridcolor=gcolor, dtick=1, title_standoff=5, title_font = {"size": 13, "family":"Verdana, sans-serif"})
+    fig.update_xaxes(
+        row=3,
+        col=1,
+        range=["1991", f"{current_yr+1}"],
+        tickfont_size=14,
+        gridcolor=gcolor,
+    )
+    fig.update_yaxes(
+        title_text="Number of Records (log)",
+        type="log",
+        showexponent="all",
+        exponentformat="power",
+        row=3,
+        col=1,
+        tickfont_size=13,
+        gridcolor=gcolor,
+        dtick=1,
+        title_standoff=5,
+        title_font={"size": 13, "family": "Verdana, sans-serif"},
+    )
 
-    #Settings
+    # Settings
     fig.update_layout(
-        height=950, 
-        width=640, 
-        plot_bgcolor="#333333", 
-        paper_bgcolor="#333333", 
+        height=950,
+        width=640,
+        plot_bgcolor="#414141",
+        paper_bgcolor="#414141",
         font_color="#DEDEDE",
         font_size=13,
-        margin=dict(l=10, r=10, t=30, b=10), 
+        margin=dict(l=10, r=10, t=30, b=10),
         showlegend=False,
-        xaxis = dict(
+        xaxis=dict(
             title=None,
             showticklabels=True,
-            gridcolor='#757575',
+            gridcolor="#757575",
         ),
-        yaxis = dict(
-            showticklabels=True,
-            gridcolor='#757575'
-        ),
+        yaxis=dict(showticklabels=True, gridcolor="#757575"),
         hoverlabel=dict(
-            bgcolor="rgba(72,72,72,0.8)",#484848
-            bordercolor="rgba(72,72,72,0.8)",#484848
-            font_color='#DEDEDE',
-            font_family='Verdana, sans-serif',
-            font_size=13
-            )
-        )
+            bgcolor="rgba(72,72,72,0.8)",  # 484848
+            bordercolor="rgba(72,72,72,0.8)",  # 484848
+            font_color="#DEDEDE",
+            font_family="Verdana, sans-serif",
+            font_size=13,
+        ),
+    )
 
     # Hide unnecessary buttons from plot
-    config={"modeBarButtonsToRemove": ['select2d','lasso2d','autoScale2d','zoomIn2d','zoomOut2d']}
+    config = {
+        "modeBarButtonsToRemove": [
+            "select2d",
+            "lasso2d",
+            "autoScale2d",
+            "zoomIn2d",
+            "zoomOut2d",
+        ]
+    }
 
     # Add watermark
-    y_coord=[0.98,0.605,0.24]
+    y_coord = [0.98, 0.605, 0.24]
     for c in y_coord:
         fig.add_layout_image(
             dict(
@@ -128,8 +210,9 @@ def yr_weekly_scats():
                 sizex=0.25,
                 sizey=0.25,
                 sizing="contain",
-                opacity=.04,
-                layer="above")
+                opacity=0.04,
+                layer="above",
+            )
         )
 
     return st.plotly_chart(fig, config=config, use_container_width=True)
