@@ -43,7 +43,7 @@ st.markdown(hide_st_style, unsafe_allow_html=True)
 # Fullscreen Button (hide)
 hide_full_screen = """
             <style>
-            button.css-es6a1a.e19lei0e1{visibility: hidden;}
+            button.css-z52931.e19lei0e1{visibility: hidden;}
             </style>
             """
 st.markdown(hide_full_screen, unsafe_allow_html=True)
