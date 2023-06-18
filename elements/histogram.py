@@ -5,7 +5,7 @@ import plotly.express as px
 
 def main_hist():
     # Colors
-    favcol = ["#00383b", "#00595e", "#009ba1", "#00CCD3", "#faffff"]
+    favcol = ["#00383b", "#007a81", "#009ba1", "#00CCD3", "#faffff"]
 
     # Data
     hist_data = pd.read_parquet("assets/models/histogram.parquet.gzip")
@@ -281,7 +281,7 @@ def main_hist():
         width=1700,
         bargroupgap=0.1,
         margin=dict(l=10, r=10, t=10, b=10),
-        font_color="#DEDEDE",
+        font_color="#F0F0F0",
         font_size=15,
         xaxis=dict(
             title=None,
@@ -300,7 +300,7 @@ def main_hist():
         hovermode="x unified",
         hoverlabel=dict(
             bgcolor="rgba(72,72,72,0.85)",  # 484848
-            font_color="#DEDEDE",
+            font_color="#F0F0F0",
             font_family="Helvetica",
             font_size=14,
         ),

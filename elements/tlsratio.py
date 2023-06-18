@@ -7,7 +7,7 @@ from matplotlib.offsetbox import OffsetImage, AnchoredOffsetbox
 
 
 def tls_ratio():
-    bicolor = ["#00595e", "#faffff"]
+    bicolor = ["#007a81", "#faffff"]
 
     tl_count = pd.read_parquet("assets/models/tls-ratio.parquet.gzip")
 
@@ -36,7 +36,7 @@ def tls_ratio():
         ha="center",
         va="center",
         fontsize=24,
-        color="#DEDEDE",
+        color="#F0F0F0",
     )
 
     # Formating segment values' font
@@ -49,7 +49,7 @@ def tls_ratio():
     for i, patch in enumerate(patches):
         texts[i].set_color(patch.get_facecolor())
 
-    plt.title("Ukraine", y=-0.01, fontsize=16, color="#DEDEDE")
+    plt.title("Ukraine", y=-0.01, fontsize=16, color="#F0F0F0")
 
     fig.set_facecolor("#414141")
 

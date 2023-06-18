@@ -16,7 +16,7 @@ def modification_date(file):
 
 
 def top_5():
-    colors = ["#00595e", "#faffff"]
+    colors = ["#007a81", "#faffff"]
 
     top = pd.read_parquet("assets/models/country-stats.parquet.gzip").nlargest(
         5, "frequency"
@@ -48,7 +48,7 @@ def top_5():
             total + 2000,  # distance from bar
             i - 0.08,  # vertical position with respect to a bar
             f"{round(total):,}",
-            color="#dedede",
+            color="#F0F0F0",
             size=9,
         )
 
@@ -60,7 +60,7 @@ def top_5():
         fontsize="medium",
         facecolor="#414141",
         edgecolor="#414141",
-        labelcolor="#dedede",
+        labelcolor="#F0F0F0",
         loc=(0.1, -0.1),
         prop={"size": 9},
     )
@@ -73,7 +73,7 @@ def top_5():
     fig.set_facecolor("#414141")
 
     plt.xticks([])
-    plt.yticks(color="#dedede", size=10)
+    plt.yticks(color="#F0F0F0", size=10)
 
     plt.title(
         "Top 5 Regions of Ukraine\nwith the Largest Number\nof Weapons Theft and Loss Cases",
@@ -81,7 +81,7 @@ def top_5():
         fontdict=dict(
             fontsize=12,
             # fontweight='bold',
-            color="#dedede",
+            color="#F0F0F0",
         ),
     )
 
@@ -91,7 +91,7 @@ def top_5():
         xy=(3.3, 1),
         xytext=(totals.max() - totals.max() * 0.05, 1.1),
         fontsize=9,
-        color="#dedede",
+        color="#F0F0F0",
     )
 
     current_yr = int(modification_date("assets/models/country-stats.parquet.gzip"))
@@ -101,7 +101,7 @@ def top_5():
         xy=(3.3, 1),
         xytext=(totals.max() * -0.45, -1.25),
         fontsize=8,
-        color="#dedede",
+        color="#F0F0F0",
     )
 
     def watermark2(ax):

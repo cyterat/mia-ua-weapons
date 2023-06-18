@@ -38,7 +38,7 @@ def hbar_wep():
     plt.title(
         "Total Number of Records\nin each Weapon Category",
         pad=15,
-        fontdict=dict(fontsize=11, fontweight="bold", color="#dedede"),
+        fontdict=dict(fontsize=11, fontweight="bold", color="#F0F0F0"),
     )
 
     # Watermark
@@ -66,7 +66,7 @@ def hbar_wep():
             i.get_y() + 0.26,
             f"{round((i.get_width()), 2):,}",
             fontsize=8,
-            color="#dedede",
+            color="#F0F0F0",
         )
 
     ax.set_axisbelow(True)

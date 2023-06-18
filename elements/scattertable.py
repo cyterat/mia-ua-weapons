@@ -3,7 +3,7 @@ import pandas as pd
 import plotly.express as px
 
 # Colors
-favcol = ["#00383b", "#00595e", "#009ba1", "#00CCD3", "#faffff"]
+favcol = ["#00383b", "#007a81", "#009ba1", "#00CCD3", "#faffff"]
 
 
 # Scatter table
@@ -63,7 +63,7 @@ def scatter_table():
         margin=dict(l=10, r=10, t=10, b=10),
         xaxis=dict(
             title=None,
-            tickfont_color="#dedede",
+            tickfont_color="#F0F0F0",
             gridcolor="#414141",
             tickfont_size=13,
             tickfont_family="Verdana, sans-serif",
@@ -73,7 +73,7 @@ def scatter_table():
         yaxis=dict(
             title=None,
             gridcolor="#484848",  # 484848 #414141
-            tickfont_color="#dedede",
+            tickfont_color="#F0F0F0",
             tickfont_size=14,
             tickfont_family="Verdana, sans-serif",
             ticks="outside",
@@ -81,8 +81,8 @@ def scatter_table():
         coloraxis_colorbar=dict(
             y=0.5,
             title="",
-            titlefont_color="#dedede",
-            tickfont_color="#dedede",
+            titlefont_color="#F0F0F0",
+            tickfont_color="#F0F0F0",
             tickfont_size=13,
             tickfont_family="Verdana",
             ticks="outside",
@@ -90,7 +90,7 @@ def scatter_table():
         hoverlabel=dict(
             bgcolor="rgba(72,72,72,0.8)",  # 484848
             bordercolor="rgba(72,72,72,0.8)",  # 484848
-            font_color="#DEDEDE",
+            font_color="#F0F0F0",
             font_family="Verdana, sans-serif",
             font_size=13,
         ),

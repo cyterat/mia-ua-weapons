@@ -18,7 +18,7 @@ current_yr = int(modification_date("assets/models/yr-weekly-scats.parquet.gzip")
 
 def yr_weekly_scats():
     # Colors
-    favcol = ["#00383b", "#00595e", "#009ba1", "#00CCD3", "#faffff"]
+    favcol = ["#00383b", "#007a81", "#009ba1", "#00CCD3", "#faffff"]
 
     ## Data
     # Theft and Loss
@@ -169,7 +169,7 @@ def yr_weekly_scats():
         width=640,
         plot_bgcolor="#414141",
         paper_bgcolor="#414141",
-        font_color="#DEDEDE",
+        font_color="#F0F0F0",
         font_size=13,
         margin=dict(l=10, r=10, t=30, b=10),
         showlegend=False,
@@ -182,7 +182,7 @@ def yr_weekly_scats():
         hoverlabel=dict(
             bgcolor="rgba(72,72,72,0.8)",  # 484848
             bordercolor="rgba(72,72,72,0.8)",  # 484848
-            font_color="#DEDEDE",
+            font_color="#F0F0F0",
             font_family="Verdana, sans-serif",
             font_size=13,
         ),
