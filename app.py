@@ -26,7 +26,7 @@ from elements import region_theftloss_totals
 # Page
 st.set_page_config(
     page_title="Lost and Stolen Weapons in Ukraine",
-    page_icon="⚔️",
+    page_icon="assets\cyan-tesseract-3d-200x200.png",
     layout="wide",
 )
 
@@ -51,7 +51,7 @@ st.markdown(hide_full_screen, unsafe_allow_html=True)
 # Metrics red color (change)
 change_metrics_red = """
             <style>
-            .css-wnm74r.e16fv1kl0{color: FF8A8A;}
+            div.css-wnm74r.e16fv1kl0{color: FF8A8A;}
             </style>
             """
 st.markdown(change_metrics_red, unsafe_allow_html=True)
