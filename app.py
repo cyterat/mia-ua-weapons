@@ -134,7 +134,7 @@ with st.spinner("Please wait a few seconds while I prepare everything...🔥"):
     # =========================#
     # --------SECTION 2--------#
 
-    m1, m2, m3, m4, m5, m6, m7 = st.columns((1.5, 1.2, 1.2, 1.2, 1, 1, 1))
+    m1, m2, m3, m4, m5, m6, m7 = st.columns((1.4, 1.2, 1.2, 1.2, 1, 1, 1))
 
     with m1:
         # # Temporary off
@@ -147,8 +147,8 @@ with st.spinner("Please wait a few seconds while I prepare everything...🔥"):
 
         st.metric(
             "~ Population (2023)",
-            34000000,
-            "-8000000",  # According to UN
+            f"{34000000:,}",
+            f"-{8000000,}",  # According to UN
             delta_color="normal",
             help="According to IDSS of Ukraine, the country's population was between 28 and 34 million as of January 1, 2023.",
         )
@@ -179,6 +179,7 @@ with st.spinner("Please wait a few seconds while I prepare everything...🔥"):
             f"{(region_tl[region_tl['date'].dt.year==int(update_year('assets/models/country-stats.parquet.gzip'))]['loss'].sum()):,}",
             f"{(region_tl[region_tl['date'].dt.year==int(update_year('assets/models/country-stats.parquet.gzip'))]['loss'].sum() - region_tl[region_tl['date'].dt.year==int(update_year('assets/models/country-stats.parquet.gzip'))-1]['loss'].sum()):,}",
             delta_color="inverse",
+            help="Current number compared to previous year total",
         )
 
     with m7:
@@ -187,6 +188,7 @@ with st.spinner("Please wait a few seconds while I prepare everything...🔥"):
             f"{(region_tl[region_tl['date'].dt.year==int(update_year('assets/models/country-stats.parquet.gzip'))]['theft'].sum()):,}",
             f"{(region_tl[region_tl['date'].dt.year==int(update_year('assets/models/country-stats.parquet.gzip'))]['theft'].sum() - region_tl[region_tl['date'].dt.year==int(update_year('assets/models/country-stats.parquet.gzip'))-1]['theft'].sum()):,}",
             delta_color="inverse",
+            help="Current number compared to previous year total",
         )
 
     st.markdown("***", unsafe_allow_html=True)
