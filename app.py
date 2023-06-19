@@ -47,15 +47,6 @@ hide_full_screen = """
             """
 st.markdown(hide_full_screen, unsafe_allow_html=True)
 
-# Metrics red color (temporary change)
-change_metrics_red = """
-            <style>
-            div[data-testid="metric-container"] > div[data-testid="stMetricDelta"] > div p {color: #FF8A8A !important;}
-            div[data-testid="metric-container"] > div[data-testid="stMetricDelta"] > svg p {color: #FF8A8A !important;}
-            </style>
-            """
-st.markdown(change_metrics_red, unsafe_allow_html=True)
-
 # Page padding
 st.markdown(
     f"""
