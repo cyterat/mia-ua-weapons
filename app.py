@@ -50,7 +50,8 @@ st.markdown(hide_full_screen, unsafe_allow_html=True)
 # Metrics red color (temporary change)
 change_metrics_red = """
             <style>
-            div[data-testid="metric-container"] > div[data-testid="stMetricDelta"] {color: #FF8A8A;}
+            div[data-testid="metric-container"] > div[data-testid="stMetricDelta"] > svg {color: #FF8A8A;}
+            div[data-testid="metric-container"] > div[data-testid="stMetricDelta"] > div {color: #FF8A8A;}
             </style>
             """
 st.markdown(change_metrics_red, unsafe_allow_html=True)
