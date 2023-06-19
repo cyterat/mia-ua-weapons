@@ -3,7 +3,7 @@ import pandas as pd
 import plotly.express as px
 
 # Colors
-favcol = ["#00383b", "#007a81", "#009ba1", "#00CCD3", "#faffff"]
+favcol = ["#00383b", "#006268", "#009ba1", "#00e5ed", "#faffff"]
 
 
 # Scatter table
