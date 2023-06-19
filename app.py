@@ -50,7 +50,7 @@ st.markdown(hide_full_screen, unsafe_allow_html=True)
 # Metrics red color (temporary change)
 change_metrics_red = """
             <style>
-            #root > div:nth-child(1) > div.withScreencast > div > div > div > section > div > div:nth-child(1) > div > div:nth-child(11) > div.css-e92e3u.e1tzin5v2 > div:nth-child(1) > div > div > div > div.css-wnm74r.e16fv1kl0 {color: #FF8A8A;}
+            div.css-e92e3u.e1tzin5v2 > div:nth-child(1) > div > div > div > div.css-wnm74r.e16fv1kl0 {color: #FF8A8A;}
             </style>
             """
 st.markdown(change_metrics_red, unsafe_allow_html=True)
