@@ -137,16 +137,13 @@ with st.spinner("Please wait a few seconds while I prepare everything...🔥"):
     m1, m2, m3, m4, m5, m6, m7 = st.columns((1.5, 1.2, 1.2, 1.2, 1, 1, 1))
 
     with m1:
-	# Temporary off
-	"""	
-        st.metric(
-            "Population (end of 2021)",
-            f"{population['2021'].sum():,}",
-            f"{(population['2021'].sum()-population['2020'].sum()):,}",
-            delta_color="normal",
-        )
-	"""
-	
+	# Temporary off	
+        # st.metric(
+        #     "Population (end of 2021)",
+        #     f"{population['2021'].sum():,}",
+        #     f"{(population['2021'].sum()-population['2020'].sum()):,}",
+        #     delta_color="normal",
+        # )
 	st.metric(
 	    "~ Population (2023)",
             34000000,
