@@ -137,12 +137,23 @@ with st.spinner("Please wait a few seconds while I prepare everything...🔥"):
     m1, m2, m3, m4, m5, m6, m7 = st.columns((1.5, 1.2, 1.2, 1.2, 1, 1, 1))
 
     with m1:
+	# Temporary off
+	"""	
         st.metric(
             "Population (end of 2021)",
             f"{population['2021'].sum():,}",
             f"{(population['2021'].sum()-population['2020'].sum()):,}",
             delta_color="normal",
         )
+	"""
+	
+	st.metric(
+	    "~ Population (2023)",
+            34000000,
+            "-8000000", # According to UN
+            delta_color="normal",
+	    help="According to IDSS of Ukraine, the country's population was between 28 and 34 million as of January 1, 2023."
+        ) 
 
     with m2:
         st.metric(
@@ -151,10 +162,10 @@ with st.spinner("Please wait a few seconds while I prepare everything...🔥"):
         )
 
     with m3:
-        st.metric("Loss", f"{regional_stats['loss'].sum():,}")
+        st.metric("Total Lost", f"{regional_stats['loss'].sum():,}")
 
     with m4:
-        st.metric("Theft", f"{regional_stats['theft'].sum():,}")
+        st.metric("Total Stolen", f"{regional_stats['theft'].sum():,}")
 
     with m5:
         st.metric(
