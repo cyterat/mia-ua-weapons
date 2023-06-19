@@ -47,6 +47,14 @@ hide_full_screen = """
             """
 st.markdown(hide_full_screen, unsafe_allow_html=True)
 
+# Metrics red color (temporary change)
+change_metrics_red = """
+            <style>
+            div[data-testid="metric-container"] > div[data-testid="stMetricDelta"] > div p {color: #FF8A8A !important;}
+            div[data-testid="metric-container"] > div[data-testid="stMetricDelta"] > svg p {color: #FF8A8A !important;}
+            </style>
+            """
+st.markdown(change_metrics_red, unsafe_allow_html=True)
 
 # Page padding
 st.markdown(
@@ -1675,11 +1683,3 @@ div.st-ae {
  </style>
 """
 st.markdown(hide_spinner_succes, unsafe_allow_html=True)
-
-# Metrics red color (temporary change)
-change_metrics_red = """
-            <style>
-            div.css-e92e3u.e1tzin5v2 > div:nth-child(1) > div > div > div > div.css-wnm74r.e16fv1kl0 {color: #FF8A8A;}
-            </style>
-            """
-st.markdown(change_metrics_red, unsafe_allow_html=True)
