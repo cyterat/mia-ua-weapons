@@ -51,7 +51,8 @@ st.markdown(hide_full_screen, unsafe_allow_html=True)
 # Metrics red color (change)
 change_metrics_red = """
             <style>
-            div.css-wnm74r.e16fv1kl0{color: FF8A8A;}
+            div.css-50ug3q.e16fv1kl3{color: #FF8A8A;}
+            div.e1fb0mya1.css-jhkj9c.ex0cdmw0{color: #FF8A8A;}
             </style>
             """
 st.markdown(change_metrics_red, unsafe_allow_html=True)
@@ -1637,25 +1638,15 @@ with st.spinner("Please wait a few seconds while I prepare everything...🔥"):
     # --------FOOTER--------#
     footer = """
         <style>
-        a:link , a:visited{
-        color: blue;
-        background-color: transparent;
-        text-decoration: underline;
-        }
-
-        a:hover,  a:active {
-        color: red;
-        background-color: transparent;
-        text-decoration: underline;
-        }
 
         .footer {
         position: fixed;
         left: 0;
         bottom: 0;
         width: 100%;
-        background-color: #484848;
-        color: #EEEEEE;
+        padding: 4px;
+        background-color: #292929;
+        color: #d5d5d5;
         text-align: center;
         }
         </style>
