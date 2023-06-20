@@ -17,6 +17,7 @@ https://ua-weapons.streamlit.app/
 
 ## 🚧Updates
 * ~~Currently working on a more automated method of cleaning and modeling data based on the existing jupyter notebooks.~~
+* Currently working on an updated layout and overall visibility of different elements.
 
 
 ## 🛠 Libraries
