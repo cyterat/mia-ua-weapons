@@ -1,0 +1,419 @@
+@import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700&family=Noto+Sans:wght@400;700;900&display=swap');
+
+:root {
+    --main-bg-color: #333333;
+    --main-highlight-color: #2dcdd2;
+
+    --tile-bg-color: #292929;
+    --tile-bg-darker-color: #262626;
+    --tile-shadow-before: rgba(0, 0, 0, 0.5) 0px 4px 4px 0.5px;
+    --tile-shadow-after: rgba(0, 0, 0, 0.5) 0px 2px 2.5px 0px;
+    --tile-transform_after: None;
+    /* --tile-transform_after: translateY(0.25px); */
+    --primary-font-color: #dedede;
+    --secondary-font-color: #8d9294;
+    --primary-ff: 'Noto Sans', sans-serif;
+    --secondary-ff: 'Montserrat', sans-serif;
+    --light-fw: 400;
+    --medium-fw: 700;
+    --heavy-fw-NS: 900;
+}
+
+/* Hide "streamlit" assets */
+#MainMenu {
+    visibility: hidden;
+}
+
+header {
+    visibility: hidden;
+}
+
+footer {
+    visibility: hidden;
+}
+
+/* Main font */
+html,
+body,
+[class*="css"] {
+    color: var(--primary-font-color);
+    font-family: var(--primary-ff);
+    font-weight: var(--primary-fw);
+    row-gap: 0rem;
+    column-gap: 2rem;
+}
+
+/* Unordered list */
+ul {
+    margin: 0px 0px 1rem;
+    padding: 0px 0px 0.5rem;
+}
+
+@media screen and (max-width: 1480px) {
+    div[data-testid="stVerticalBlock"]>div>div[data-testid="stVerticalBlock"]>div[data-testid="stHorizontalBlock"] {
+        display: flex;
+        flex-direction: column;
+        flex-wrap: nowrap;
+    }
+
+
+    div[data-testid="stVerticalBlock"]>div>div[data-testid="stVerticalBlock"]>div[data-testid="stHorizontalBlock"]>div[data-testid="column"] {
+        width: 45%;
+        margin-top: 10px;
+    }
+
+    div[data-testid="stVerticalBlock"]>div>div[data-testid="stVerticalBlock"]>div[data-testid="stHorizontalBlock"]>div[data-testid="column"]>div>div>div>div>div[class="stPlotlyChart js-plotly-plot"]>div>div>svg[class="main-svg"] {
+        overflow: visible;
+    }
+
+    .appview-container .main .block-container {
+        padding-top: 0rem;
+        padding-bottom: 0rem;
+        padding-left: 1rem;
+        padding-right: 1rem;
+    }
+
+}
+
+@media screen and (max-width: 1100px) {
+    div[data-testid="stHorizontalBlock"] {
+        display: flex;
+        flex-direction: column;
+        flex-wrap: nowrap;
+        align-items: center;
+    }
+
+    div[data-testid="stHorizontalBlock"]>div[data-testid="column"] {
+        width: 100%;
+    }
+}
+
+
+/* Hide images' fullscreen button */
+button[title="View fullscreen"] {
+    visibility: hidden;
+}
+
+div[data-testid="stVerticalBlock"]>div>div[data-testid="stVerticalBlock"]>div>div>div>div>div>.stMarkdown>div[data-testid="stMarkdownContainer"] {
+    height: 6rem;
+}
+
+.stMarkdown {
+    margin-left: 0rem;
+    margin-top: 1rem;
+}
+
+div[data-testid="stHorizontalBlock"] {
+    row-gap: 0rem !important;
+    column-gap: 1.5rem;
+    padding-block: 0rem;
+}
+
+div[data-testid="stVerticalBlock"] {
+    row-gap: 1.5rem;
+    column-gap: 1.5rem;
+    padding-block: 0rem;
+}
+
+div[data-testid="stVerticalBlock"]>div>div[data-testid="stVerticalBlock"] {
+    row-gap: 1rem;
+}
+
+div[data-testid="stVerticalBlock"]>div>div[data-testid="stVerticalBlock"]>div[data-testid="stHorizontalBlock"] {
+    align-items: center;
+    background-color: var(--tile-bg-color);
+    line-height: 1.4;
+    border-radius: 0.6rem;
+    text-align: center;
+    font-weight: var(--medium-fw);
+    box-shadow: var(--tile-shadow-before);
+    font-family: var(--secondary-ff);
+    cursor: default !important;
+    padding-top: 5px;
+    padding-bottom: 5px;
+    padding-right: 5px;
+    padding-left: 5px;
+}
+
+div[data-testid="stVerticalBlock"]>div>div[data-testid="stVerticalBlock"]>div[data-testid="stHorizontalBlock"]:hover {
+    background-color: var(--tile-bg-color);
+    box-shadow: var(--tile-shadow-after);
+    transform: var(--tile-transform_after);
+}
+
+/* Page padding */
+.appview-container .main .block-container {
+    padding-top: 2rem;
+    padding-bottom: 0rem;
+    padding-left: 3rem;
+    padding-right: 3rem;
+}
+
+/* Page padding */
+.block-container>div>div>div>div>div>h1 {
+    padding-top: 0rem;
+    padding-bottom: 0rem;
+}
+
+/* Page header (title and subtitle) */
+.page-header {
+    margin-bottom: 1.5rem;
+    padding-top: 0rem;
+    padding-bottom: 1rem;
+    background-color: var(--tile-bg-color);
+    border-radius: 0.6rem;
+    font-family: var(--secondary-ff);
+    text-align: center;
+    box-shadow: var(--tile-shadow-before);
+    font-family: var(--secondary-ff);
+    cursor: default !important;
+}
+
+.page-header:hover {
+    background-color: var(--tile-bg-color);
+    box-shadow: var(--tile-shadow-after);
+    transform: var(--tile-transform_after);
+}
+
+/* Page title */
+.main-title {
+    font-size: 50px;
+    font-weight: var(--medium-fw);
+}
+
+/* Page subtitle */
+.main-subtitle {
+    font-size: 14px;
+    font-weight: var(--light-fw);
+}
+
+/* Sections header */
+.section-header {
+    margin-top: 1rem;
+    margin-bottom: 0rem;
+    background-color: var(--tile-bg-color);
+    border-radius: 0.6rem;
+    font-family: var(--secondary-ff);
+    text-align: center;
+    box-shadow: var(--tile-shadow-before);
+    font-family: var(--secondary-ff);
+    cursor: default !important;
+    font-size: 28px;
+    font-weight: var(--medium-fw);
+}
+
+.section-header:hover {
+    background-color: var(--tile-bg-color);
+    box-shadow: var(--tile-shadow-after);
+    transform: var(--tile-transform_after);
+}
+
+
+/* Plotly charts */
+div[class="stPlotlyChart js-plotly-plot"] {
+    background-color: var(--tile-bg-color);
+    border-radius: 0.6rem;
+    padding: 0rem;
+    box-shadow: var(--tile-shadow-before);
+    font-family: var(--secondary-ff);
+    cursor: default !important;
+    margin-block: 0.1rem;
+}
+
+div[data-testid="stVerticalBlock"]>div>div[data-testid="stVerticalBlock"]>div[data-testid="stHorizontalBlock"]>div[data-testid="column"]>div>div>div>div>div[class="stPlotlyChart js-plotly-plot"] {
+    background-color: var(--tile-bg-darker-color);
+    border-radius: 0.6rem;
+    padding: 0rem;
+    box-shadow: var(--tile-shadow-before);
+    font-family: var(--secondary-ff);
+    cursor: default !important;
+    margin-block: 0.1rem;
+}
+
+div[class="stPlotlyChart js-plotly-plot"]:hover {
+    background-color: var(--tile-bg-color);
+    box-shadow: var(--tile-shadow-after);
+    transform: var(--tile-transform_after);
+    z-index: 999;
+}
+
+/* Regional records plotly charts */
+div[data-testid="stVerticalBlock"]>.stTabs>div>div[data-baseweb="tab-panel"] div>div>div>div>div[class="stPlotlyChart js-plotly-plot"] {
+    background-color: transparent;
+    border: None;
+    line-height: 0rem;
+    border-radius: 0rem;
+    font-size: 14px;
+    font-weight: var(--medium-fw);
+    box-shadow: None;
+    font-family: var(--secondary-ff);
+    cursor: default !important;
+    padding-top: 0rem;
+    padding-bottom: 0rem;
+    padding-right: 5px;
+    padding-left: 0rem;
+}
+
+
+/* TLDR text */
+div[class="tldr"] {
+    width: 95%;
+}
+
+
+/* Tabs wrap on window resize */
+div[data-baseweb="tab-list"] {
+    display: flex;
+    flex-direction: row;
+    flex-wrap: wrap;
+    row-gap: 0rem;
+    justify-content: center;
+}
+
+/* Tabs text */
+div[data-baseweb="tab-list"]>button>div>p {
+    margin: 0px 0px 0px
+}
+
+/* Tabs text */
+div[data-baseweb="tab-list"]>button[data-baseweb="tab"] {
+    background-color: transparent;
+}
+
+
+/* Main metrics */
+.total-metric {
+    display: flex;
+    flex-wrap: wrap;
+    flex-direction: row;
+    column-gap: 1.5rem;
+    row-gap: 1.5rem;
+    padding-top: 0rem;
+    margin-bottom: 1rem;
+    align-items: stretch;
+    justify-content: center;
+}
+
+.total-metric-item {
+    background-color: var(--tile-bg-color);
+    border: inherit;
+    line-height: 1.4;
+    border-radius: 0.6rem;
+    font-size: 14px;
+    font-weight: var(--medium-fw);
+    color: var(--primary-font-color);
+    box-shadow: var(--tile-shadow-before);
+    font-family: var(--secondary-ff);
+    cursor: default !important;
+    padding-top: 10px;
+    padding-bottom: 5px;
+    padding-right: 15px;
+    padding-left: 15px;
+}
+
+.total-metric-item:hover {
+    background-color: var(--tile-bg-color);
+    box-shadow: var(--tile-shadow-after);
+    transform: var(--tile-transform_after);
+}
+
+/* Table */
+div[data-testid="stTable"] {
+    background-color: var(--tile-bg-color);
+    line-height: 1.4;
+    border-radius: 0.6rem;
+    font-size: 14px;
+    font-weight: var(--medium-fw);
+    box-shadow: var(--tile-shadow-before);
+    font-family: var(--secondary-ff);
+    cursor: default !important;
+    padding-top: 10px;
+    padding-bottom: 5px;
+    padding-right: 15px;
+    padding-left: 15px;
+    text-align-last: center;
+}
+
+div[data-testid="stTable"]:hover {
+    background-color: var(--tile-bg-color);
+    box-shadow: var(--tile-shadow-after);
+    transform: var(--tile-transform_after);
+}
+
+div[data-testid="stTable"] td {
+    background-color: transparent;
+}
+
+div[data-testid="stTable"] .index_name {
+    color: var(--secondary-font-color);
+    font-weight: normal;
+}
+
+div[data-testid="stTable"] th:not(.index_name) {
+    background-color: transparent;
+    color: var(--primary-font-color);
+}
+
+div[data-testid="stTable"] tr:hover th[scope="row"] {
+    background-color: var(--main-highlight-color);
+    color: var(--tile-bg-color);
+}
+
+div[data-testid="stTable"] tr:hover {
+    background-color: var(--main-highlight-color);
+    color: var(--tile-bg-color);
+}
+
+div[data-testid="stTable"] tr:hover td {
+    color: var(--tile-bg-color) !important;
+}
+
+div[data-testid="stTable"] * {
+    border: transparent;
+    text-align: center;
+}
+
+
+div[data-testid="stTickBarMin"],
+div[data-testid="stTickBarMax"] {
+    font-size: 12px;
+}
+
+div[data-baseweb="slider"] {
+    padding-top: 0rem !important;
+}
+
+
+/* Streamlit tabs */
+.stTabs {
+    background-color: var(--tile-bg-color);
+    border: inherit;
+    line-height: 1.4px;
+    border-radius: 0.6rem;
+    font-size: 14px;
+    font-weight: var(--medium-fw);
+    box-shadow: var(--tile-shadow-before);
+    font-family: var(--secondary-ff);
+    cursor: default !important;
+    padding-bottom: 5px;
+    padding-right: 15px;
+    padding-left: 15px;
+}
+
+.stTabs:hover {
+    background-color: var(--tile-bg-color);
+    box-shadow: var(--tile-shadow-after);
+    transform: var(--tile-transform_after);
+}
+
+.stTabs::after {
+    background-image: None;
+}
+
+.stTabs>div>div[data-baseweb="tab-border"] {
+    background-color: transparent;
+}
+
+div[data-baseweb="tab-panel"] {
+    padding-top: 0rem;
+}
