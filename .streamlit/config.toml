@@ -1,5 +1,5 @@
 [theme]
-primaryColor="#00CCD3" #cyan
-backgroundColor="#414141" #lightblack
-secondaryBackgroundColor="#484848" #darkgrey
+primaryColor="#2dcdd2" #cyan
+backgroundColor="#333333" #gray
+secondaryBackgroundColor="#292929" #black
 textColor="#F0F0F0" #white

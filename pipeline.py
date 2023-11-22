@@ -4,37 +4,36 @@ import numpy as np
 
 def import_data():
     print("\n1/7 Import data...")
-
-    # Flie object
+    
     file = 'https://data.gov.ua/dataset/d0af9ba0-08b3-4bca-8508-02cffeaae8fd/resource/1fcab772-0b3c-4938-8f72-e60db343cbe5/download/weaponswanted.json'
-
+    
     parsed = pd.read_json(file, orient='records')
-        
+            
     print("☑️ Data imported:")
     print(f"\nRows --> {parsed.shape[0]:,}")
     print(f"Columns --> {parsed.shape[1]}")
     print(f"Memory usage --> {int(parsed.memory_usage(deep=True).sum()/1000000)} MB")
     print(f"\nMissing values:\n{parsed.isna().sum() + parsed[parsed == ''].count()}")
-
     return parsed
 
 
 def cast_dtypes(parsed):
     print("\n2/7 Cast data types...")
-
+    
     df = parsed.loc[:,['weaponnumber', 'weaponkind', 'organunit', 'reasonsearch', 'insertdate', 'theftdate']].copy()
 
     # Removing duplicates
     df = df.drop_duplicates()
 
-    # Cast date and other columns to 'datetime64' and 'category' types respectively
+    # Cast date and other columns to 'datetime64[ns]' and 'string' types respectively
     for c in df.columns:
         if c in ['insertdate', 'theftdate']:
-            df[c] = pd.to_datetime(df[c], utc=True, format='%Y-%m-%d', errors = 'coerce').dt.date
-            df[c] = df[c].astype('datetime64')
+            df[c] = pd.to_datetime(df[c], errors = 'coerce')
         else:
-            df[c] = df[c].astype('category')
+            df[c] = df[c].astype('string')
     
+    print(f"\nRows --> {df.shape[0]:,}")
+    print(f"Columns --> {df.shape[1]}")
     print("☑️ Data types casted")
     return df
 
@@ -52,8 +51,10 @@ def column_reasonsearch(df):
     df['reasonsearch'] = df['reasonsearch'].replace('Втрата','Loss')
 
     df = df.rename(columns={'reasonsearch':'report'})
-    df['report'] = df['report'].astype('category')
-
+    df['report'] = df['report'].astype('string')
+    
+    print(f"\nRows --> {df.shape[0]:,}")
+    print(f"Columns --> {df.shape[1]}")
     print("☑️ Column 'reasonsearch' cleaned")
     return df   
 
@@ -129,7 +130,7 @@ def column_region(df):
     # 2nd Searching for cities, districts, towns, etc., in "tmp_region" and replacing them with their respective region names from "regx_acenters"
     for k,v in regx_acenters.items(): 
         tmp_region[tmp_region.str.contains(regx_acenters[k])]= str(k)
-
+    
     tmp_region = tmp_region.rename('region')
 
     # Joining "region" column to the original dataframe
@@ -144,9 +145,11 @@ def column_region(df):
     # Removing "organunit" column
     df = df.drop(columns=['organunit'])
 
-    # Casting values to category data type
-    df['region'] = df['region'].astype('category')
-
+    # Casting values to string data type
+    df['region'] = df['region'].astype('string')
+    
+    print(f"\nRows --> {df.shape[0]:,}")
+    print(f"Columns --> {df.shape[1]}")
     print("☑️ 'region' column created")
     return df
 
@@ -274,9 +277,9 @@ def column_weaponcategory(df):
         on='weaponkind'
     )
 
-    # Casting values to category data type
-    df['weaponcategory'] = df['weaponcategory'].astype('category')
-
+    # Casting values to string data type
+    df['weaponcategory'] = df['weaponcategory'].astype('string')
+    
     # Check wether any new weapons are present in a dataset
     if df['weaponcategory'].count() != df['region'].count():
         new_weapons=set()
@@ -288,11 +291,13 @@ def column_weaponcategory(df):
                 new_weapons.add(r)
                 count+=1
 
+        print(f"\n Number of unique entries --> {str(df['weaponkind'].nunique())}")
         print(f"\n❗️ {count} records of {len(new_weapons)} new weapons present: {str(new_weapons)[1:-1]}")
         print("Update 'wps_df' Series objects with new weapons!")
 
+    print(f"\nRows --> {df.shape[0]:,}")
+    print(f"Columns --> {df.shape[1]}")
     print("☑️ Column 'weaponcategory' created")
-
     return df
 
 
@@ -301,36 +306,37 @@ def column_date(df):
     
     # Substituting missing values with those from the adjacent column
     df['theftdate'] = df['theftdate'].combine_first(df['insertdate'])
-   
+    
     # Dropping "insertdate" column since it is no longer needed
     df = df.drop('insertdate', axis=1)
 
     # Removing records with missing "theftdate" value
     df = df.drop(index=df[df['theftdate']==''].index)
-
+ 
     # Renaming column to "date"
     df = df.rename(columns={'theftdate':'date'})
 
     # Excluding Ukrainian SSR records from DataFrame
     df = df[df['date'] >= '1991-08-24'].sort_values(by='date').reset_index(drop=True)
-
-    ## Crimean records
+    
+    # Crimean records
     # Storing 'argwhere' arrays in a variable
     cond_args = np.argwhere([(df.loc[:,'region']=='Simferopol') & (df.loc[:,'date']>='2014-03-25')])
-    
+
     # Overwriting main dataframe values with '2014-03-24', using 'cond_args' indexes
     for _, index in cond_args:
-        df.loc[index, 'date'] = pd.to_datetime('2014-03-24')
-
-    # Assert proper date format
-    assert (df[~df['date'].astype('str').str.contains(r'\d{4}-\d{2}-\d{2}')]).shape[0]==0, f"\n❗️ Dates should have YYYY-MM-DD format"
-
+        df.loc[index, 'date'] = pd.to_datetime('2014-03-24').tz_localize(None)
+    
+    print(f"\nRows --> {df.shape[0]:,}")
+    print(f"Columns --> {df.shape[1]}")
     print("☑️ 'date' column created")
     return df
 
 
 def export_data(df):
     print("\n7/7 Export data...")
+    
+    assert df.shape[0]!=0, "\n❗️ Dataframe is empty"
     
     # Rearranging and sorting columns
     end_df = df.loc[:,['date','region', 'report', 'weaponcategory']].sort_values(by=['date','region']).reset_index(drop=True).copy()

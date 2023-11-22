@@ -1,23 +1,21 @@
 import streamlit as st
 import pandas as pd
-import os.path
-import time
+import numpy as np
 
-from elements import main_hist
-from elements import yr_weekly_scats
-from elements import scatter_table
-from elements import hbar_wep
-from elements import tls_ratio
-from elements import top_5
-from elements import region_population_end2021
-from elements import region_total_end2021
-from elements import region_yr_totals_linegarph
-from elements import region_maxmin
-from elements import region_yr_totals_linegrph2012
-from elements import region_rank_total
-from elements import region_total
-from elements import region_theftloss_piechart
-from elements import region_theftloss_totals
+from elements import generate_events_barchart
+from elements import generate_reports_scatterplot
+from elements import generate_reports_piechart
+from elements import generate_weapons_scatterplot
+from elements import generate_region_total_table
+from elements import generate_weaponcategory_total_table
+
+from elements import generate_rank_region_population
+from elements import generate_region_total_linechart
+from elements import generate_region_weapons_polarchart
+from elements import generate_region_report_10y_linechart
+
+from utils import modification_date  
+from utils import current_total_records  
 
 
 # ========================#
@@ -27,1650 +25,785 @@ from elements import region_theftloss_totals
 st.set_page_config(
     page_title="Lost and Stolen Weapons in Ukraine",
     layout="wide",
-)
+    )
 
-# "Made with streamlit" (hide)
-hide_st_style = """
-            <style>
-            #MainMenu {visibility: hidden;}
-            header {visibility: hidden;}
-            footer{visibility: hidden;}
-            </style>
-            """
-st.markdown(hide_st_style, unsafe_allow_html=True)
-
-# Fullscreen Button (hide)
-hide_full_screen = """
-            <style>
-            button.css-z52931.e19lei0e1{visibility: hidden;}
-            </style>
-            """
-st.markdown(hide_full_screen, unsafe_allow_html=True)
-
-# Page padding
-st.markdown(
-    f"""
-    <style>
-        .appview-container .main .block-container{{
-            padding-top: {0}rem;
-            padding-bottom: {0}rem;
-            padding-left: {3}rem;
-            padding-right: {2}rem;
-        }}
-    </style>""",
-    unsafe_allow_html=True,
-)
-
-# Font
-streamlit_font = """
-			<style>
-			@import url('https://fonts.googleapis.com/css2?family=Noto+Sans:wght@500&display=swap');
-
-			html, body, [class*="css"]  {
-			font-family: 'Noto Sans', sans-serif;
-			}
-			</style>
-			"""
-st.markdown(streamlit_font, unsafe_allow_html=True)
+# Style
+with open('style.css') as f:
+    st.markdown(
+        f"<style>{f.read()}</style>",
+        unsafe_allow_html=True
+        )
 
 # Colors
-clr = "#00ccd3"
-biclr = ["#faffff", "#007a81"]
+clr_main ="#26c8cd"
+clr_outlier = "#e54848"
+clr_tile_background = "#292929"
+clr_page_background ="#333333"
+clr_font = "#dedede"
+clr_secondary_font = "#8d9294"
+clr_transparent = "rgba(0,0,0,0)"
+
+# Font
+font_family = 'Montserrat, sans-serif'
 
 
 # ====================#
 # --------DATA--------#
 
-regional_stats = pd.read_parquet("assets/models/country-stats.parquet.gzip")
-top = regional_stats.nlargest(5, "frequency")
-bot = regional_stats.nsmallest(5, "frequency")
+region_total = pd.read_parquet("assets/models/region-total.parquet.gzip")
+top = region_total.nlargest(5, "total")
+bot = region_total.nsmallest(5, "total")
 
-agg_weapon_ctgr = pd.read_parquet("assets/models/agg-weapon-ctgr.parquet.gzip")
+model_weaponcategory_total = pd.read_parquet("assets/models/weaponcategory-total.parquet.gzip").set_index('weaponcategory')
+model_region_year_total = pd.read_parquet("assets/models/region-year-total.parquet.gzip")
+date_report_total = pd.read_parquet("assets/models/date-report-total.parquet.gzip")
+# population = pd.read_csv("assets/ua-population.csv").iloc[:,[0,-2,-1]]
 
-region_tl = pd.read_parquet("assets/models/regions-tl.parquet.gzip")
+# File modification year
+current_date = modification_date("assets/models/region-total.parquet.gzip","date")
 
-population = pd.read_csv("assets/ua-population.csv", usecols=["region", "2020", "2021"])
+
+# ====================#
+# --------PAGE--------#
 
 # Spinner
 with st.spinner("Please wait a few seconds while I prepare everything...🔥"):
+
+
     # =====================#
     # --------TITLE--------#
-
-    def update_year(file):
-        t = os.path.getmtime(file)
-        year, month, day, hour, minute, second = time.localtime(t)[:-3]
-        year = f"{year}"
-        return year
-
-    # Project title
-    st.title(
-        f"Lost and Stolen Weapons in Ukraine (1991-{update_year('assets/models/country-stats.parquet.gzip')})"
-    )
-
-    def modification_date(file):
-        t = os.path.getmtime(file)
-        year, month, day, hour, minute, second = time.localtime(t)[:-3]
-        date = f"{year}-{month}-{day}"
-        return date
-
-    # Project description
+    
     st.markdown(
         f"""
-        <small><span style='color: #484848'>Last update: {modification_date('assets/models/country-stats.parquet.gzip')}</span></small>
-        <br><small>This webpage is a visual representation of the dataset provided by MIA of Ukraine to the open data portal under the Creative Commons Attribution license.</small>
+        <div class="page-header">
+            <div class="main-title">
+                LOST AND STOLEN WEAPONS IN UKRAINE
+            </div>
+            <div class="main-subtitle">
+                This webpage is a visual representation of the dataset provided by MIA of Ukraine to the open data portal under the Creative Commons Attribution license.<br> 
+                <a style=text-align: center; href="https://github.com/cyterat"><img src="https://images2.imgbox.com/3f/e6/RqycpnL4_o.png" alt="cyterat" width="25" height="30"></a>
+                <span style='color: #838383; font-size: 15px'>Last update: {current_date}</span>
+            </div>
+        </div>
         """,
-        unsafe_allow_html=True,
-    )
-
+        unsafe_allow_html=True
+        )
+    
+    
     # =========================#
     # --------SECTION 1--------#
 
-    # Histogram
-    main_hist()
+    # Barchart
+    generate_events_barchart()
 
-    st.write("***")
 
     # =========================#
     # --------SECTION 2--------#
+    
+    # Metrics
+    overall_total = date_report_total['total'].sum()
+    overall_total_l = date_report_total[date_report_total["report"] == "Loss"]['total'].sum()
+    overall_total_t = date_report_total[date_report_total["report"] == "Theft"]['total'].sum()
+    
+    # tmp (~population according to the IDSS of Ukraine)
+    current_population =  34000000
+    delta_population = 8000000
 
-    m1, m2, m3, m4, m5, m6, m7 = st.columns((1.4, 1.2, 1.2, 1.2, 1, 1, 1))
-
-    with m1:
-        # # Temporary off
-        # st.metric(
-        #     "Population (end of 2021)",
-        #     f"{population['2021'].sum():,}",
-        #     f"{(population['2021'].sum()-population['2020'].sum()):,}",
-        #     delta_color="normal"
-        #     )
-
-        st.metric(
-            "~ Population (2023)",
-            f"{34000000:,}",
-            f"-{8000000:,}",  # According to UN
-            delta_color="normal",
-            help="According to IDSS of Ukraine, the country's population was between 28 and 34 million as of January 1, 2023.",
+    current_date, current_total, new_records, delta_color, sign = current_total_records(info="total")
+    current_date, current_total_l, new_records_l, delta_color_l, sign_l = current_total_records(info="loss")
+    current_date, current_total_t, new_records_t, delta_color_t, sign_t = current_total_records(info="theft")
+    
+    st.markdown(
+        f"""
+        <div class=total-metric>
+            <button disabled class='total-metric-item'>
+                <span title='According to IDSS, the population of Ukraine was between 28 and 34 million as of January 1, 2023.'>
+                    <span style='font-size: 15px'>~ Population (2023) <sup>?</sup></span><br>
+                    <span style='font-size: 36px'>{current_population:,}</span><br>
+                    <span style='color: {delta_color}; font-size: 15px'>-{delta_population:,}</span>
+                </span>
+            </button>
+            <button disabled class='total-metric-item'>
+                <span title='Delta represents number of the newly added records (monthly update)'>
+                    <span style='font-size: 15px'>Total Records <sup>?</sup></span><br>
+                    <span style='font-size: 36px'>{overall_total:,}</span><br>
+                    <span style='color: {delta_color}; font-size: 15px'>{sign}{new_records:,}</span>
+                </span>
+            </button>
+            <button disabled class='total-metric-item'>
+                <span title='Delta represents number of the newly added records (monthly update)'>
+                    <span style='font-size: 15px'>Total Weapons Lost <sup>?</sup></span><br>
+                    <span style='font-size: 36px'>{overall_total_l:,}</span><br>
+                    <span style='color: {delta_color_l}; font-size: 15px'>{sign_l}{new_records_l:,}</span>
+                </span>
+            </button>
+            <button disabled class='total-metric-item'>
+                <span title='Delta represents number of the newly added records (monthly update)'>
+                    <span style='font-size: 15px'>Total Weapons Stolen <sup>?</sup></span><br>
+                    <span style='font-size: 36px'>{overall_total_t:,}</span><br>
+                    <span style='color: {delta_color_t}; font-size: 15px'>{sign_t}{new_records_t:,}</span>
+                </span>
+            </button>
+            <button disabled class='total-metric-item'>
+                <span style='font-size: 15px'>Records ({current_date})</span><br>
+                <span style='font-size: 36px'>{current_total:,}</span><br>
+            </button>
+            <button disabled class='total-metric-item'>
+                <span style='font-size: 15px'>Weapons Lost ({current_date})</span><br>
+                <span style='font-size: 36px'>{current_total_l:,}</span><br>
+            </button>
+            <button disabled class='total-metric-item'>
+                <span style='font-size: 15px'>Weapons Stolen ({current_date})</span><br>
+                <span style='font-size: 36px'>{current_total_t:,}</span><br>
+            </button>
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
+    
+    
+    # =========================#
+    # --------SECTION 3--------#
+    
+    # TLDR (Overview)
+    st.markdown(
+        f"""
+        <div class="section-header">
+            TL;DR
+        </div>
+        """,
+        unsafe_allow_html=True
         )
-
-    with m2:
-        st.metric(
-            "Total Records",
-            f"{(regional_stats['loss'].sum()+regional_stats['theft'].sum()):,}",
-        )
-
-    with m3:
-        st.metric("Total Lost", f"{regional_stats['loss'].sum():,}")
-
-    with m4:
-        st.metric("Total Stolen", f"{regional_stats['theft'].sum():,}")
-
-    with m5:
-        st.metric(
-            f"Records ({update_year('assets/models/country-stats.parquet.gzip')})",
-            f"{(region_tl[region_tl['date'].dt.year==int(update_year('assets/models/country-stats.parquet.gzip'))]['total'].sum()):,}",
-            f"{(region_tl[region_tl['date'].dt.year==int(update_year('assets/models/country-stats.parquet.gzip'))]['total'].sum() - region_tl[region_tl['date'].dt.year==int(update_year('assets/models/country-stats.parquet.gzip'))-1]['total'].sum()):,}",
-            delta_color="inverse",
-        )
-
-    with m6:
-        st.metric(
-            f"Weapons Lost ({update_year('assets/models/country-stats.parquet.gzip')})",
-            f"{(region_tl[region_tl['date'].dt.year==int(update_year('assets/models/country-stats.parquet.gzip'))]['loss'].sum()):,}",
-            f"{(region_tl[region_tl['date'].dt.year==int(update_year('assets/models/country-stats.parquet.gzip'))]['loss'].sum() - region_tl[region_tl['date'].dt.year==int(update_year('assets/models/country-stats.parquet.gzip'))-1]['loss'].sum()):,}",
-            delta_color="inverse",
-            help="Current number compared to previous year total",
-        )
-
-    with m7:
-        st.metric(
-            f"Weapons Stolen ({update_year('assets/models/country-stats.parquet.gzip')})",
-            f"{(region_tl[region_tl['date'].dt.year==int(update_year('assets/models/country-stats.parquet.gzip'))]['theft'].sum()):,}",
-            f"{(region_tl[region_tl['date'].dt.year==int(update_year('assets/models/country-stats.parquet.gzip'))]['theft'].sum() - region_tl[region_tl['date'].dt.year==int(update_year('assets/models/country-stats.parquet.gzip'))-1]['theft'].sum()):,}",
-            delta_color="inverse",
-            help="Current number compared to previous year total",
-        )
-
-    st.markdown("***", unsafe_allow_html=True)
-
-    _a, sec2_col2, _b, sec2_col3, _c = st.columns((1, 3, 0.25, 6, 1))
-
-    with _a:
-        st.empty()
-
-    with sec2_col2:
-        top_5()
-
-        tls_ratio()
-
-    with _b:
-        st.empty()
-
-    with sec2_col3:
-        # Scatterplots
-        yr_weekly_scats()
-
-    with _c:
-        st.empty()
-
-    st.markdown("<br>", unsafe_allow_html=True)
-
-    (
-        sec2_1_col1,
-        sec2_1_col2,
-        sec2_1_col3,
-        sec2_1_col4,
-        sec2_1_col5,
-        sec2_1_col6,
-    ) = st.columns(6)
-
-    with sec2_1_col1:
+    
+    sec3_col1, sec3_col2 = st.columns((1.1, 2))
+    
+    with sec3_col1:
+        
+        generate_region_total_table(region_total.set_index('region'))
+        
+    with sec3_col2:
+        
         total_prev = (
-            region_tl[region_tl["date"].dt.year < 2014]
+            model_region_year_total[model_region_year_total["date"].dt.year < 2014]
             .groupby(["region"])["total"]
             .sum()
             .reset_index()["total"]
             .sum()
         )
         total_2014 = (
-            region_tl[region_tl["date"].dt.year == 2014]
+            model_region_year_total[model_region_year_total["date"].dt.year == 2014]
             .groupby(["region"])["total"]
             .sum()
             .reset_index()["total"]
             .sum()
         )
-        pct_diff = int(total_2014 / total_prev * 100)
-
+        pct_diff_2014 = int(total_2014 / total_prev * 100)
+        diff_2014 = (total_2014 - total_prev)
+        
         st.markdown(
+            # <div class='total-metric-item' style='font-family:{font_family}'>
             f"""
-            * In <span style='color: {clr}'>2014</span> alone there were nearly 
-                <span style='color: {clr}'>{pct_diff}% more records</span> than in all previous years combined.
+            <div class='tldr' style='font-family:{font_family}'>
+                <ul>
+                    In <span style='color: {clr_main}'>2014</span> there were nearly <span title='{diff_2014:,} records' style='color: {clr_main}'>{pct_diff_2014}% more records</span> than in all previous years combined.
+                </ul>
+                <ul>
+                    <span style='color: {clr_main}'>2017</span> had an abnormally high number of <span style='color: {clr_main}'>lost weapons in the Donetsk and Luhansk regions</span>. No particularly significant events 
+                    which would explain this anomaly took place during that period, except for the <span style='color: {clr_main}'>large-scale police reform in 2015</span>.
+                </ul>
+                <ul>
+                    <span style='color: {clr_main}'>Simferopol</span> (Crimea) region accounts for around <span title="{int(top[top['region']=='Simferopol']['total']):,} records" style='color: {clr_main}'>{int(round(top[top['region']=='Simferopol']['total_pct'], 2)*100)}%</span> of all records. 
+                    The main contributor to this high percentage was the <span style='color: {clr_main}'>2014</span> annexation, meaning that all 
+                    <span style='color: {clr_main}'>weapons registered</span> there were likely <span style='color: {clr_main}'>labeled as lost or stolen</span>.
+                    The same applies to the <span style='color: {clr_main}'>Donetsk</span> region, which makes up approximately <span title="{int(top[top['region']=='Donetsk']['total']):,} records" style='color: {clr_main}'>{int(round(top[top['region']=='Donetsk']['total_pct'], 2)*100)}%</span> of all records. 
+                </ul>
+                <ul>
+                    The <span style='color: {clr_main}'>tiniest</span> share of the country records has the <span style='color: {clr_main}'>{bot.iloc[0,0]}</span> region, 
+                    around <span title="{bot.iloc[0]['total']:,} records" style='color: {clr_main}'>{round(bot.iloc[0]['total_pct'], 3)*100:.1f}%</span>. 
+                    It is closely followed by <span style='color: {clr_main}'>{bot.iloc[1,0]}</span>, accounting for 
+                    <span title="{bot.iloc[1]['total']:,} records" style='color: {clr_main}'>{round(bot.iloc[1]['total_pct'], 3)*100:.1f}%</span> of all reports.
+                </ul>
+                <ul>
+                    <span style='color: {clr_main}'>{region_total.loc[region_total['theft_pct'].idxmin()]['region']}</span> has the 
+                    <span style='color: {clr_main}'>lowest</span> percentage of <span style='color: {clr_main}'>theft</span> reports, 
+                    only <span title="{region_total.loc[region_total['theft_pct'].idxmin()]['theft']:,} records" 
+                    style='color:{clr_main}'>{int(round(region_total.loc[region_total['theft_pct'].idxmin(),'theft_pct'], 2)*100)}%</span>, and the 
+                    <span style='color: {clr_main}'>highest loss</span> percentage, nearly 
+                    <span title="{region_total.loc[region_total['loss_pct'].idxmax()]['loss']:,} records" 
+                    style='color:{clr_main}'>{int(round(region_total.loc[region_total['loss_pct'].idxmax(),'loss_pct'], 2)*100)}%</span>.
+                    By contrast, <span style='color: {clr_main}'>{region_total.loc[region_total['theft_pct'].idxmax()]['region']} </span>
+                    has around <span title="{region_total.loc[region_total['theft_pct'].idxmax()]['theft']:,} records" 
+                    style='color:{clr_main}'>{int(round(region_total.loc[region_total['theft_pct'].idxmax(),'theft_pct'], 2)*100)}%</span> 
+                    of its records being <span style='color: {clr_main}'>theft</span> reports,
+                    the <span style='color: {clr_main}'>highest</span> number among all regions.
+                </ul>
+                <ul>
+                    The <span style='color: {clr_main}'>two</span> most "popular" 
+                    <span style='color: {clr_main}'>weapon categories</span>, which are making up almost 
+                    <span title='{model_weaponcategory_total.loc[model_weaponcategory_total.index[:2],'total'].sum():,} records' 
+                    style='color:{clr_main}'>{(model_weaponcategory_total.loc[model_weaponcategory_total.index[:2],'total'].sum()/model_weaponcategory_total.loc[:,'total'].sum())*100:.0f}%</span> of all records, are 
+                    <span title='{model_weaponcategory_total.loc[model_weaponcategory_total.index[0],'total'].sum():,} records' 
+                    style='color: {clr_main}'>{model_weaponcategory_total.index[0]}</span> and 
+                    <span title='{model_weaponcategory_total.loc[model_weaponcategory_total.index[1],'total'].sum():,} records' 
+                    style='color: {clr_main}'>{model_weaponcategory_total.index[1]}</span>.
+                </ul>
+            </div>
             """,
             unsafe_allow_html=True,
         )
 
-    with sec2_1_col2:
-        st.markdown(
-            f"""
-            * <span style='color: {clr}'>Simferopol</span> (Crimea) accounts for around <span title="{top.loc[0,'frequency']:,} records" 
-                style='color: {clr}'>{int(round(top.iloc[0]['pct_of_total'], 2)*100)}%</span> of all records. 
-                The main contributor to this high percentage was the <span style='color: {clr}'>2014</span> annexation, meaning that all 
-                <span style='color: {clr}'>weapons registered</span> there were likely <span style='color: {clr}'>labeled as lost or stolen</span>.
-            """,
-            unsafe_allow_html=True,
-        )
-
-    with sec2_1_col3:
-        st.markdown(
-            f"""
-            * The <span style='color: {clr}'>tiniest</span> share of the country records has the <span style='color: {clr}'>{bot.iloc[0,0]}</span> region, 
-                around <span title="{bot.iloc[0]['frequency']:,} records" style='color: {clr}'>{round(bot.iloc[0]['pct_of_total'], 3)*100}%</span>. 
-                It is closely followed by <span style='color: {clr}'>{bot.iloc[1,0]}</span>, accounting for 
-                <span title="{bot.iloc[1]['frequency']:,} records" style='color: {clr}'>{round(bot.iloc[1]['pct_of_total'], 3)*100}%</span> of all reports.
-            """,
-            unsafe_allow_html=True,
-        )
-
-    with sec2_1_col4:
-        st.markdown(
-            f"""
-            * <span style='color: {clr}'>{regional_stats.loc[regional_stats['theft_pct'].idxmin()]['region']}</span> has the 
-                <span style='color: {clr}'>lowest</span> percentage of <span style='color: {clr}'>theft</span> reports, 
-                only <span title="{regional_stats.loc[regional_stats['theft_pct'].idxmin()]['theft']:,} records" 
-                style='color:{clr}'>{int(round(regional_stats.loc[regional_stats['theft_pct'].idxmin(),'theft_pct'], 2)*100)}%</span>, and the 
-                <span style='color: {clr}'>highest loss</span> percentage, nearly 
-                <span title="{regional_stats.loc[regional_stats['loss_pct'].idxmax()]['loss']:,} records" 
-                style='color:{clr}'>{int(round(regional_stats.loc[regional_stats['loss_pct'].idxmax(),'loss_pct'], 2)*100)}%</span>.<br>
-            """,
-            unsafe_allow_html=True,
-        )
-
-    with sec2_1_col5:
-        st.markdown(
-            f"""
-            * <span style='color: {clr}'>{regional_stats.loc[regional_stats['theft_pct'].idxmax()]['region']}</span>, 
-                on the contrary, has around <span title="{regional_stats.loc[regional_stats['theft_pct'].idxmax()]['theft']:,} records" 
-                style='color:{clr}'>{int(round(regional_stats.loc[regional_stats['theft_pct'].idxmax(),'theft_pct'], 2)*100)}%</span> 
-                of its records being <span style='color: {clr}'>theft</span> reports,
-                the <span style='color: {clr}'>highest</span> number among all regions.<br>
-            """,
-            unsafe_allow_html=True,
-        )
-
-    with sec2_1_col6:
-        st.markdown(
-            f"""
-            * The <span style='color: {clr}'>two</span> most "popular" 
-                <span style='color: {clr}'>weapon categories</span>, which make up roughly 
-                <span title='{agg_weapon_ctgr.loc[agg_weapon_ctgr.index[:2],'total'].sum():,} records' 
-                style='color:{clr}'>{(agg_weapon_ctgr.loc[agg_weapon_ctgr.index[:2],'total'].sum()/agg_weapon_ctgr.loc[:,'total'].sum())*100:.0f}%</span> of all records, are 
-                <span title='{agg_weapon_ctgr.loc[agg_weapon_ctgr.index[0],'total'].sum():,} records' 
-                style='color: {clr}'>{agg_weapon_ctgr.index[0]}</span> and 
-                <span title='{agg_weapon_ctgr.loc[agg_weapon_ctgr.index[1],'total'].sum():,} records' 
-                style='color: {clr}'>{agg_weapon_ctgr.index[1]}</span>.
-            """,
-            unsafe_allow_html=True,
-        )
-
-    st.write("***")
 
     # =========================#
-    # --------SECTION 3--------#
+    # --------SECTION 4--------#
+    
+    # Reports
+    st.markdown(
+        f"""
+        <div class="section-header">
+            Reports
+        </div>
+        """,
+        unsafe_allow_html=True
+        )
+    
+    sec4_col1, sec4_col2 = st.columns((5,1))
+    
+    with sec4_col1: 
+        tab1, tab2, tab3, tab4 = st.tabs(['Yearly','Monthly', 'Weekly','Daily'])
+        # Scatter plots
+        with tab1:
+            generate_reports_scatterplot('yearly')
+        
+        with tab2:
+            generate_reports_scatterplot('monthly')
+        
+        with tab3:
+            generate_reports_scatterplot('weekly')
+        
+        with tab4:
+            generate_reports_scatterplot('daily')
+    
+    with sec4_col2:
+        
+        year = st.selectbox(label='', options=np.arange(1991, int(modification_date("assets/models/region-total.parquet.gzip",'year'))+1, 1), label_visibility='hidden')
+    
+        generate_reports_piechart(year)
+        
+        
+    # =========================#
+    # --------SECTION 5--------#
+    
+    # Weapon categories
+    st.markdown(
+        f"""
+        <div class="section-header">
+            Weapon Categories
+        </div>
+        """,
+        unsafe_allow_html=True
+        )
+    
+    sec5_col1, sec5_col2 = st.columns((1.1, 3))
 
-    st.markdown("<h4>Weapon categories</h4><br>", unsafe_allow_html=True)
-
-    sec3_col1, _a, sec3_col2, _b = st.columns((6, 0.25, 2, 0.5))
-
-    with sec3_col1:
-        # "Scatter table"
-        scatter_table()
-
-    with _a:
-        st.empty()
-
-    with sec3_col2:
-        # Horizontal bar chart
-        hbar_wep()
+    with sec5_col1:
+        # Table
+        generate_weaponcategory_total_table(model_weaponcategory_total)
 
         # Weapon categories explanations
         st.markdown(
             f"""
             
-            * <span title='{agg_weapon_ctgr.loc["Artillery",'total']} records, {agg_weapon_ctgr.loc["Artillery",'percentage']:.2%} of total' style='color: {clr}'>Artillery</span><br><small> grenade launcher, mortar, ATGM, MANPAD, etc.</small>
+            * <span title='{model_weaponcategory_total.loc["Artillery",'total']} records, {model_weaponcategory_total.loc["Artillery",'total'] / model_weaponcategory_total['total'].sum():.2%} of total' style='color: {clr_main}'>Artillery</span><br><small> grenade launcher, mortar, ATGM, MANPAD, etc.</small>
             
-            * <span title='{agg_weapon_ctgr.loc["Bladed",'total']} records, {agg_weapon_ctgr.loc["Bladed",'percentage']:.2%} of total' style='color: {clr}'>Bladed</span><br><small> knife, sword, bayonet, saber, etc.</small>
+            * <span title='{model_weaponcategory_total.loc["Bladed",'total']} records, {model_weaponcategory_total.loc["Bladed",'total'] / model_weaponcategory_total['total'].sum():.2%} of total' style='color: {clr_main}'>Bladed</span><br><small> knife, sword, bayonet, saber, etc.</small>
             
-            * <span title='{agg_weapon_ctgr.loc["Handguns",'total']} records, {agg_weapon_ctgr.loc["Handguns",'percentage']:.2%} of total' style='color: {clr}'>Handguns</span><br><small> pistol, revolver, machine pistol, traumatic pistol, etc.</small>
+            * <span title='{model_weaponcategory_total.loc["Handguns",'total']} records, {model_weaponcategory_total.loc["Handguns",'total'] / model_weaponcategory_total['total'].sum():.2%} of total' style='color: {clr_main}'>Handguns</span><br><small> pistol, revolver, machine pistol, traumatic pistol, etc.</small>
             
-            * <span title='{agg_weapon_ctgr.loc["Heavy firearms",'total']} records, {agg_weapon_ctgr.loc["Heavy firearms",'percentage']:.2%} of total' style='color: {clr}'>Heavy firearms</span><br><small> autocannon, cannon, machine gun, anti-tank rifle, etc.</small>
+            * <span title='{model_weaponcategory_total.loc["Heavy firearms",'total']} records, {model_weaponcategory_total.loc["Heavy firearms",'total'] / model_weaponcategory_total['total'].sum():.2%} of total' style='color: {clr_main}'>Heavy firearms</span><br><small> autocannon, cannon, machine gun, anti-tank rifle, etc.</small>
             
-            * <span title='{agg_weapon_ctgr.loc["Light firearms",'total']} records, {agg_weapon_ctgr.loc["Light firearms",'percentage']:.2%} of total' style='color: {clr}'>Light firearms</span><br><small> assault rifle, carabine, shotgun, marksman rifle, etc.</small>
+            * <span title='{model_weaponcategory_total.loc["Light firearms",'total']} records, {model_weaponcategory_total.loc["Light firearms",'total'] / model_weaponcategory_total['total'].sum():.2%} of total' style='color: {clr_main}'>Light firearms</span><br><small> assault rifle, carabine, shotgun, marksman rifle, etc.</small>
             
-            * <span title='{agg_weapon_ctgr.loc["Other",'total']} records, {agg_weapon_ctgr.loc["Other",'percentage']:.2%} of total' style='color: {clr}'>Other</span><br><small> receiver, ammunition, crossbow, carabine replica, etc.</small>
+            * <span title='{model_weaponcategory_total.loc["Other",'total']} records, {model_weaponcategory_total.loc["Other",'total'] / model_weaponcategory_total['total'].sum():.2%} of total' style='color: {clr_main}'>Other</span><br><small> receiver, ammunition, crossbow, carabine replica, etc.</small>
             
-            * <span title='{agg_weapon_ctgr.loc["Pneumatic&Flobert",'total']} records, {agg_weapon_ctgr.loc["Pneumatic&Flobert",'percentage']:.2%} of total' style='color: {clr}'>Pneumatic&Flobert</span><br><small> pneumatic rifle, pneumatic pistol, Flobert rifle, Flobert revolver, etc.</small>
+            * <span title='{model_weaponcategory_total.loc["Pneumatic&Flobert",'total']} records, {model_weaponcategory_total.loc["Pneumatic&Flobert",'total'] / model_weaponcategory_total['total'].sum():.2%} of total' style='color: {clr_main}'>Pneumatic&Flobert</span><br><small> pneumatic rifle, pneumatic pistol, Flobert rifle, Flobert revolver, etc.</small>
             
-            * <span title='{agg_weapon_ctgr.loc["Explosives",'total']} records, {agg_weapon_ctgr.loc["Explosives",'percentage']:.2%} of total' style='color: {clr}'>Explosives</span><br><small> explosive material, grenade, rocket, shell, etc.</small>
+            * <span title='{model_weaponcategory_total.loc["Explosives",'total']} records, {model_weaponcategory_total.loc["Explosives",'total'] / model_weaponcategory_total['total'].sum():.2%} of total' style='color: {clr_main}'>Explosives</span><br><small> explosive material, grenade, rocket, shell, etc.</small>
             
             """,
             unsafe_allow_html=True,
         )
+        
+    with sec5_col2:
+        # "Scatterplot"
+        generate_weapons_scatterplot()
 
-    with _b:
-        st.empty()
-
-    st.write("***")
 
     # =========================#
-    # --------SECTION 4--------#
-
+    # --------SECTION 6--------#
+    
+    # Regional records
     st.markdown(
-        "<h4>Regional records</h4><small>Administrative centers here represent entire regions (oblasts)</small>",
-        unsafe_allow_html=True,
-    )
-
-    sec4_tab1, sec4_tab2, sec4_tab3, sec4_tab4, sec4_tab5 = st.tabs(
-        ["Central", "Northern", "Southern", "Western", "Eastern"]
-    )
-
-    # Central
-    with sec4_tab1:
-        # Cherkasy
-        a1, a2, a3, a4, a5, a6, a7, a8, a9 = st.columns(
-            (0.95, 0.55, 0.35, 0.3, 0.9, 0.32, 0.53, 0.35, 0.75)
+        f"""
+        <div class="section-header">
+            Regional Records<br>
+            <span style='font-size:14px; color:{clr_secondary_font}; display: inline-block;'>
+                Administrative centers here represent entire regions (oblasts)<br>
+                Ranked by the total number of records, where #1 region has the most records in Ukraine
+            </span>
+        </div>
+        """,
+        unsafe_allow_html=True
         )
-        # Region name
+
+    with st.container():
+        
+        # Cherkasy
+        a1, a2, a3, a4, _ = st.columns(
+            
+            # (0.3, 0.1, 0.3, 0.25, 0.3)
+            (1,1,1,1,0.1)
+        )
+        
         with a1:
-            st.markdown("<br></br>", unsafe_allow_html=True)
-            st.markdown("<font size='6.5'>Cherkasy</font>", unsafe_allow_html=True)
+            generate_rank_region_population("Cherkasy")
 
-        # Population
         with a2:
-            st.markdown("<br></br>", unsafe_allow_html=True)
-            region_population_end2021("Cherkasy")
+            generate_region_total_linechart("Cherkasy")
 
-        # Total number of cases for the current year
         with a3:
-            st.markdown("<br>", unsafe_allow_html=True)
-            region_total_end2021("Cherkasy")
-
-        # Rank among other regions
+            generate_region_weapons_polarchart('Cherkasy')
+        
         with a4:
-            st.markdown("<br></br>", unsafe_allow_html=True)
-            region_rank_total("Cherkasy")
+            generate_region_report_10y_linechart("Cherkasy")
 
-        # Line chart with all time total
-        with a5:
-            region_total("Cherkasy")
-            region_yr_totals_linegarph("Cherkasy")
 
-        # Maximum and minimum yearly number of records
-        with a6:
-            region_maxmin("Cherkasy")
+        # Chernihiv
+        b1, b2, b3, b4, _ = st.columns(
+            (1,1,1,1,0.1),
+        )
+    
+        with b1:
+            generate_rank_region_population("Chernihiv")
 
-        # Theft and Loss ratio Pie chart
-        with a7:
-            st.markdown("<br>", unsafe_allow_html=True)
-            region_theftloss_piechart("Cherkasy")
+        with b2:
+            generate_region_total_linechart("Chernihiv")
 
-        # Total number of cases for Theft and Loss
-        with a8:
-            st.markdown("<br>", unsafe_allow_html=True)
-            region_theftloss_totals("Cherkasy")
+        with b3:
+            generate_region_weapons_polarchart('Chernihiv')
+        
+        with b4:
+            generate_region_report_10y_linechart("Chernihiv")
 
-        # Last 10 years Line chart with Theft and Loss
-        with a9:
-            st.markdown("<center>Last 10 years trend</center>", unsafe_allow_html=True)
-            region_yr_totals_linegrph2012("Cherkasy")
 
-        st.markdown("<br>", unsafe_allow_html=True)
+        # Chernivtsi
+        c1, c2, c3, c4, _ = st.columns(
+            (1,1,1,1,0.1),
+        )
+    
+        with c1:
+            generate_rank_region_population("Chernivtsi")
+
+        with c2:
+            generate_region_total_linechart("Chernivtsi")
+
+        with c3:
+            generate_region_weapons_polarchart('Chernivtsi')
+        
+        with c4:
+            generate_region_report_10y_linechart("Chernivtsi")
+
 
         # Dnipro
-        b1, b2, b3, b4, b5, b6, b7, b8, b9 = st.columns(
-            (0.95, 0.55, 0.35, 0.3, 0.9, 0.32, 0.53, 0.35, 0.75)
+        d1, d2, d3, d4, _ = st.columns(
+            (1,1,1,1,0.1),
         )
-        # Region name
-        with b1:
-            st.markdown("<br></br>", unsafe_allow_html=True)
-            st.markdown("<font size='6.5'>Dnipro</font>", unsafe_allow_html=True)
-
-        # Population
-        with b2:
-            st.markdown("<br></br>", unsafe_allow_html=True)
-            region_population_end2021("Dnipro")
-
-        # Total number of cases for the current year
-        with b3:
-            st.markdown("<br>", unsafe_allow_html=True)
-            region_total_end2021("Dnipro")
-
-        # Rank among other regions
-        with b4:
-            st.markdown("<br></br>", unsafe_allow_html=True)
-            region_rank_total("Dnipro")
-
-        # Line chart with all time total
-        with b5:
-            region_total("Dnipro")
-            region_yr_totals_linegarph("Dnipro")
-
-        # Maximum and minimum yearly number of records
-        with b6:
-            region_maxmin("Dnipro")
-
-        # Theft and Loss ratio Pie chart
-        with b7:
-            st.markdown("<br>", unsafe_allow_html=True)
-            region_theftloss_piechart("Dnipro")
-
-        # Total number of cases for Theft and Loss
-        with b8:
-            st.markdown("<br>", unsafe_allow_html=True)
-            region_theftloss_totals("Dnipro")
-
-        # Last 10 years Line chart with Theft and Loss
-        with b9:
-            st.markdown("<center>Last 10 years trend</center>", unsafe_allow_html=True)
-            region_yr_totals_linegrph2012("Dnipro")
-
-        st.markdown("<br>", unsafe_allow_html=True)
-
-        # Kropyvnytskyi
-        c1, c2, c3, c4, c5, c6, c7, c8, c9 = st.columns(
-            (0.95, 0.55, 0.35, 0.3, 0.9, 0.32, 0.53, 0.35, 0.75)
-        )
-        # Region name
-        with c1:
-            st.markdown("<br></br>", unsafe_allow_html=True)
-            st.markdown("<font size='6.5'>Kropyvnytskyi</font>", unsafe_allow_html=True)
-
-        # Population
-        with c2:
-            st.markdown("<br></br>", unsafe_allow_html=True)
-            region_population_end2021("Kropyvnytskyi")
-
-        # Total number of cases for the current year
-        with c3:
-            st.markdown("<br>", unsafe_allow_html=True)
-            region_total_end2021("Kropyvnytskyi")
-
-        # Rank among other regions
-        with c4:
-            st.markdown("<br></br>", unsafe_allow_html=True)
-            region_rank_total("Kropyvnytskyi")
-
-        # Line chart with all time total
-        with c5:
-            region_total("Kropyvnytskyi")
-            region_yr_totals_linegarph("Kropyvnytskyi")
-
-        # Maximum and minimum yearly number of records
-        with c6:
-            region_maxmin("Kropyvnytskyi")
-
-        # Theft and Loss ratio Pie chart
-        with c7:
-            st.markdown("<br>", unsafe_allow_html=True)
-            region_theftloss_piechart("Kropyvnytskyi")
-
-        # Total number of cases for Theft and Loss
-        with c8:
-            st.markdown("<br>", unsafe_allow_html=True)
-            region_theftloss_totals("Kropyvnytskyi")
-
-        # Last 10 years Line chart with Theft and Loss
-        with c9:
-            st.markdown("<center>Last 10 years trend</center>", unsafe_allow_html=True)
-            region_yr_totals_linegrph2012("Kropyvnytskyi")
-
-        st.markdown("<br>", unsafe_allow_html=True)
-
-        # Poltava
-        d1, d2, d3, d4, d5, d6, d7, d8, d9 = st.columns(
-            (0.95, 0.55, 0.35, 0.3, 0.9, 0.32, 0.53, 0.35, 0.75)
-        )
-        # Region name
+    
         with d1:
-            st.markdown("<br></br>", unsafe_allow_html=True)
-            st.markdown("<font size='6.5'>Poltava</font>", unsafe_allow_html=True)
+            generate_rank_region_population("Dnipro")
 
-        # Population
         with d2:
-            st.markdown("<br></br>", unsafe_allow_html=True)
-            region_population_end2021("Poltava")
+            generate_region_total_linechart("Dnipro")
 
-        # Total number of cases for the current year
         with d3:
-            st.markdown("<br>", unsafe_allow_html=True)
-            region_total_end2021("Poltava")
-
-        # Rank among other regions
+            generate_region_weapons_polarchart('Dnipro')
+        
         with d4:
-            st.markdown("<br></br>", unsafe_allow_html=True)
-            region_rank_total("Poltava")
+            generate_region_report_10y_linechart("Dnipro")
 
-        # Line chart with all time total
-        with d5:
-            region_total("Poltava")
-            region_yr_totals_linegarph("Poltava")
 
-        # Maximum and minimum yearly number of records
-        with d6:
-            region_maxmin("Poltava")
-
-        # Theft and Loss ratio Pie chart
-        with d7:
-            st.markdown("<br>", unsafe_allow_html=True)
-            region_theftloss_piechart("Poltava")
-
-        # Total number of cases for Theft and Loss
-        with d8:
-            st.markdown("<br>", unsafe_allow_html=True)
-            region_theftloss_totals("Poltava")
-
-        # Last 10 years Line chart with Theft and Loss
-        with d9:
-            st.markdown("<center>Last 10 years trend</center>", unsafe_allow_html=True)
-            region_yr_totals_linegrph2012("Poltava")
-
-        st.markdown("<br>", unsafe_allow_html=True)
-
-        # Vinnytsia
-        e1, e2, e3, e4, e5, e6, e7, e8, e9 = st.columns(
-            (0.95, 0.55, 0.35, 0.3, 0.9, 0.32, 0.53, 0.35, 0.75)
+        # Donetsk
+        e1, e2, e3, e4, _ = st.columns(
+            (1,1,1,1,0.1),
         )
-        # Region name
+    
         with e1:
-            st.markdown("<br></br>", unsafe_allow_html=True)
-            st.markdown("<font size='6.5'>Vinnytsia</font>", unsafe_allow_html=True)
+            generate_rank_region_population("Donetsk")
 
-        # Population
         with e2:
-            st.markdown("<br></br>", unsafe_allow_html=True)
-            region_population_end2021("Vinnytsia")
+            generate_region_total_linechart("Donetsk")
 
-        # Total number of cases for the current year
         with e3:
-            st.markdown("<br>", unsafe_allow_html=True)
-            region_total_end2021("Vinnytsia")
-
-        # Rank among other regions
+            generate_region_weapons_polarchart('Donetsk')
+        
         with e4:
-            st.markdown("<br></br>", unsafe_allow_html=True)
-            region_rank_total("Vinnytsia")
+            generate_region_report_10y_linechart("Donetsk")
 
-        # Line chart with all time total
-        with e5:
-            region_total("Vinnytsia")
-            region_yr_totals_linegarph("Vinnytsia")
-
-        # Maximum and minimum yearly number of records
-        with e6:
-            region_maxmin("Vinnytsia")
-
-        # Theft and Loss ratio Pie chart
-        with e7:
-            st.markdown("<br>", unsafe_allow_html=True)
-            region_theftloss_piechart("Vinnytsia")
-
-        # Total number of cases for Theft and Loss
-        with e8:
-            st.markdown("<br>", unsafe_allow_html=True)
-            region_theftloss_totals("Vinnytsia")
-
-        # Last 10 years Line chart with Theft and Loss
-        with e9:
-            st.markdown("<center>Last 10 years trend</center>", unsafe_allow_html=True)
-            region_yr_totals_linegrph2012("Vinnytsia")
-
-    # Northern
-    with sec4_tab2:
-        # Chernihiv
-        a1, a2, a3, a4, a5, a6, a7, a8, a9 = st.columns(
-            (0.95, 0.55, 0.35, 0.3, 0.9, 0.32, 0.53, 0.35, 0.75)
-        )
-        # Region name
-        with a1:
-            st.markdown("<br></br>", unsafe_allow_html=True)
-            st.markdown("<font size='6.5'>Chernihiv</font>", unsafe_allow_html=True)
-
-        # Population
-        with a2:
-            st.markdown("<br></br>", unsafe_allow_html=True)
-            region_population_end2021("Chernihiv")
-
-        # Total number of cases for the current year
-        with a3:
-            st.markdown("<br>", unsafe_allow_html=True)
-            region_total_end2021("Chernihiv")
-
-        # Rank among other regions
-        with a4:
-            st.markdown("<br></br>", unsafe_allow_html=True)
-            region_rank_total("Chernihiv")
-
-        # Line chart with all time total
-        with a5:
-            region_total("Chernihiv")
-            region_yr_totals_linegarph("Chernihiv")
-
-        # Maximum and minimum yearly number of records
-        with a6:
-            region_maxmin("Chernihiv")
-
-        # Theft and Loss ratio Pie chart
-        with a7:
-            st.markdown("<br>", unsafe_allow_html=True)
-            region_theftloss_piechart("Chernihiv")
-
-        # Total number of cases for Theft and Loss
-        with a8:
-            st.markdown("<br>", unsafe_allow_html=True)
-            region_theftloss_totals("Chernihiv")
-
-        # Last 10 years Line chart with Theft and Loss
-        with a9:
-            st.markdown("<center>Last 10 years trend</center>", unsafe_allow_html=True)
-            region_yr_totals_linegrph2012("Chernihiv")
-
-        st.markdown("<br>", unsafe_allow_html=True)
-
-        # Kyiv
-        b1, b2, b3, b4, b5, b6, b7, b8, b9 = st.columns(
-            (0.95, 0.55, 0.35, 0.3, 0.9, 0.32, 0.53, 0.35, 0.75)
-        )
-        # Region name
-        with b1:
-            st.markdown("<br></br>", unsafe_allow_html=True)
-            st.markdown("<font size='6.5'>Kyiv</font>", unsafe_allow_html=True)
-
-        # Population
-        with b2:
-            st.markdown("<br></br>", unsafe_allow_html=True)
-            region_population_end2021("Kyiv")
-
-        # Total number of cases for the current year
-        with b3:
-            st.markdown("<br>", unsafe_allow_html=True)
-            region_total_end2021("Kyiv")
-
-        # Rank among other regions
-        with b4:
-            st.markdown("<br></br>", unsafe_allow_html=True)
-            region_rank_total("Kyiv")
-
-        # Line chart with all time total
-        with b5:
-            region_total("Kyiv")
-            region_yr_totals_linegarph("Kyiv")
-
-        # Maximum and minimum yearly number of records
-        with b6:
-            region_maxmin("Kyiv")
-
-        # Theft and Loss ratio Pie chart
-        with b7:
-            st.markdown("<br>", unsafe_allow_html=True)
-            region_theftloss_piechart("Kyiv")
-
-        # Total number of cases for Theft and Loss
-        with b8:
-            st.markdown("<br>", unsafe_allow_html=True)
-            region_theftloss_totals("Kyiv")
-
-        # Last 10 years Line chart with Theft and Loss
-        with b9:
-            st.markdown("<center>Last 10 years trend</center>", unsafe_allow_html=True)
-            region_yr_totals_linegrph2012("Kyiv")
-
-        st.markdown("<br>", unsafe_allow_html=True)
-
-        # Sumy
-        c1, c2, c3, c4, c5, c6, c7, c8, c9 = st.columns(
-            (0.95, 0.55, 0.35, 0.3, 0.9, 0.32, 0.53, 0.35, 0.75)
-        )
-        # Region name
-        with c1:
-            st.markdown("<br></br>", unsafe_allow_html=True)
-            st.markdown("<font size='6.5'>Sumy</font>", unsafe_allow_html=True)
-
-        # Population
-        with c2:
-            st.markdown("<br></br>", unsafe_allow_html=True)
-            region_population_end2021("Sumy")
-
-        # Total number of cases for the current year
-        with c3:
-            st.markdown("<br>", unsafe_allow_html=True)
-            region_total_end2021("Sumy")
-
-        # Rank among other regions
-        with c4:
-            st.markdown("<br></br>", unsafe_allow_html=True)
-            region_rank_total("Sumy")
-
-        # Line chart with all time total
-        with c5:
-            region_total("Sumy")
-            region_yr_totals_linegarph("Sumy")
-
-        # Maximum and minimum yearly number of records
-        with c6:
-            region_maxmin("Sumy")
-
-        # Theft and Loss ratio Pie chart
-        with c7:
-            st.markdown("<br>", unsafe_allow_html=True)
-            region_theftloss_piechart("Sumy")
-
-        # Total number of cases for Theft and Loss
-        with c8:
-            st.markdown("<br>", unsafe_allow_html=True)
-            region_theftloss_totals("Sumy")
-
-        # Last 10 years Line chart with Theft and Loss
-        with c9:
-            st.markdown("<center>Last 10 years trend</center>", unsafe_allow_html=True)
-            region_yr_totals_linegrph2012("Sumy")
-
-        st.markdown("<br>", unsafe_allow_html=True)
-
-        # Zhytomyr
-        d1, d2, d3, d4, d5, d6, d7, d8, d9 = st.columns(
-            (0.95, 0.55, 0.35, 0.3, 0.9, 0.32, 0.53, 0.35, 0.75)
-        )
-        # Region name
-        with d1:
-            st.markdown("<br></br>", unsafe_allow_html=True)
-            st.markdown("<font size='6.5'>Zhytomyr</font>", unsafe_allow_html=True)
-
-        # Population
-        with d2:
-            st.markdown("<br></br>", unsafe_allow_html=True)
-            region_population_end2021("Zhytomyr")
-
-        # Total number of cases for the current year
-        with d3:
-            st.markdown("<br>", unsafe_allow_html=True)
-            region_total_end2021("Zhytomyr")
-
-        # Rank among other regions
-        with d4:
-            st.markdown("<br></br>", unsafe_allow_html=True)
-            region_rank_total("Zhytomyr")
-
-        # Line chart with all time total
-        with d5:
-            region_total("Zhytomyr")
-            region_yr_totals_linegarph("Zhytomyr")
-
-        # Maximum and minimum yearly number of records
-        with d6:
-            region_maxmin("Zhytomyr")
-
-        # Theft and Loss ratio Pie chart
-        with d7:
-            st.markdown("<br>", unsafe_allow_html=True)
-            region_theftloss_piechart("Zhytomyr")
-
-        # Total number of cases for Theft and Loss
-        with d8:
-            st.markdown("<br>", unsafe_allow_html=True)
-            region_theftloss_totals("Zhytomyr")
-
-        # Last 10 years Line chart with Theft and Loss
-        with d9:
-            st.markdown("<center>Last 10 years trend</center>", unsafe_allow_html=True)
-            region_yr_totals_linegrph2012("Zhytomyr")
-
-    # Southern
-    with sec4_tab3:
-        # Kherson
-        a1, a2, a3, a4, a5, a6, a7, a8, a9 = st.columns(
-            (0.95, 0.55, 0.35, 0.3, 0.9, 0.32, 0.53, 0.35, 0.75)
-        )
-        # Region name
-        with a1:
-            st.markdown("<br></br>", unsafe_allow_html=True)
-            st.markdown("<font size='6.5'>Kherson</font>", unsafe_allow_html=True)
-
-        # Population
-        with a2:
-            st.markdown("<br></br>", unsafe_allow_html=True)
-            region_population_end2021("Kherson")
-
-        # Total number of cases for the current year
-        with a3:
-            st.markdown("<br>", unsafe_allow_html=True)
-            region_total_end2021("Kherson")
-
-        # Rank among other regions
-        with a4:
-            st.markdown("<br></br>", unsafe_allow_html=True)
-            region_rank_total("Kherson")
-
-        # Line chart with all time total
-        with a5:
-            region_total("Kherson")
-            region_yr_totals_linegarph("Kherson")
-
-        # Maximum and minimum yearly number of records
-        with a6:
-            region_maxmin("Kherson")
-
-        # Theft and Loss ratio Pie chart
-        with a7:
-            st.markdown("<br>", unsafe_allow_html=True)
-            region_theftloss_piechart("Kherson")
-
-        # Total number of cases for Theft and Loss
-        with a8:
-            st.markdown("<br>", unsafe_allow_html=True)
-            region_theftloss_totals("Kherson")
-
-        # Last 10 years Line chart with Theft and Loss
-        with a9:
-            st.markdown("<center>Last 10 years trend</center>", unsafe_allow_html=True)
-            region_yr_totals_linegrph2012("Kherson")
-
-        st.markdown("<br>", unsafe_allow_html=True)
-
-        # Mykolaiv
-        b1, b2, b3, b4, b5, b6, b7, b8, b9 = st.columns(
-            (0.95, 0.55, 0.35, 0.3, 0.9, 0.32, 0.53, 0.35, 0.75)
-        )
-        # Region name
-        with b1:
-            st.markdown("<br></br>", unsafe_allow_html=True)
-            st.markdown("<font size='6.5'>Mykolaiv</font>", unsafe_allow_html=True)
-
-        # Population
-        with b2:
-            st.markdown("<br></br>", unsafe_allow_html=True)
-            region_population_end2021("Mykolaiv")
-
-        # Total number of cases for the current year
-        with b3:
-            st.markdown("<br>", unsafe_allow_html=True)
-            region_total_end2021("Mykolaiv")
-
-        # Rank among other regions
-        with b4:
-            st.markdown("<br></br>", unsafe_allow_html=True)
-            region_rank_total("Mykolaiv")
-
-        # Line chart with all time total
-        with b5:
-            region_total("Mykolaiv")
-            region_yr_totals_linegarph("Mykolaiv")
-
-        # Maximum and minimum yearly number of records
-        with b6:
-            region_maxmin("Mykolaiv")
-
-        # Theft and Loss ratio Pie chart
-        with b7:
-            st.markdown("<br>", unsafe_allow_html=True)
-            region_theftloss_piechart("Mykolaiv")
-
-        # Total number of cases for Theft and Loss
-        with b8:
-            st.markdown("<br>", unsafe_allow_html=True)
-            region_theftloss_totals("Mykolaiv")
-
-        # Last 10 years Line chart with Theft and Loss
-        with b9:
-            st.markdown("<center>Last 10 years trend</center>", unsafe_allow_html=True)
-            region_yr_totals_linegrph2012("Mykolaiv")
-
-        st.markdown("<br>", unsafe_allow_html=True)
-
-        # Odesa
-        c1, c2, c3, c4, c5, c6, c7, c8, c9 = st.columns(
-            (0.95, 0.55, 0.35, 0.3, 0.9, 0.32, 0.53, 0.35, 0.75)
-        )
-        # Region name
-        with c1:
-            st.markdown("<br></br>", unsafe_allow_html=True)
-            st.markdown("<font size='6.5'>Odesa</font>", unsafe_allow_html=True)
-
-        # Population
-        with c2:
-            st.markdown("<br></br>", unsafe_allow_html=True)
-            region_population_end2021("Odesa")
-
-        # Total number of cases for the current year
-        with c3:
-            st.markdown("<br>", unsafe_allow_html=True)
-            region_total_end2021("Odesa")
-
-        # Rank among other regions
-        with c4:
-            st.markdown("<br></br>", unsafe_allow_html=True)
-            region_rank_total("Odesa")
-
-        # Line chart with all time total
-        with c5:
-            region_total("Odesa")
-            region_yr_totals_linegarph("Odesa")
-
-        # Maximum and minimum yearly number of records
-        with c6:
-            region_maxmin("Odesa")
-
-        # Theft and Loss ratio Pie chart
-        with c7:
-            st.markdown("<br>", unsafe_allow_html=True)
-            region_theftloss_piechart("Odesa")
-
-        # Total number of cases for Theft and Loss
-        with c8:
-            st.markdown("<br>", unsafe_allow_html=True)
-            region_theftloss_totals("Odesa")
-
-        # Last 10 years Line chart with Theft and Loss
-        with c9:
-            st.markdown("<center>Last 10 years trend</center>", unsafe_allow_html=True)
-            region_yr_totals_linegrph2012("Odesa")
-
-        st.markdown("<br>", unsafe_allow_html=True)
-
-        # Simferopol
-        d1, d2, d3, d4, d5, d6, d7, d8, d9 = st.columns(
-            (0.95, 0.55, 0.35, 0.3, 0.9, 0.32, 0.53, 0.35, 0.75)
-        )
-        # Region name
-        with d1:
-            st.markdown("<br></br>", unsafe_allow_html=True)
-            st.markdown("<font size='6.5'>Simferopol</font>", unsafe_allow_html=True)
-
-        # Population
-        with d2:
-            st.markdown("<br></br>", unsafe_allow_html=True)
-            region_population_end2021("Simferopol")
-
-        # Total number of cases for the current year
-        with d3:
-            st.markdown("<br>", unsafe_allow_html=True)
-            region_total_end2021("Simferopol")
-
-        # Rank among other regions
-        with d4:
-            st.markdown("<br></br>", unsafe_allow_html=True)
-            region_rank_total("Simferopol")
-
-        # Line chart with all time total
-        with d5:
-            region_total("Simferopol")
-            region_yr_totals_linegarph("Simferopol")
-
-        # Maximum and minimum yearly number of records
-        with d6:
-            region_maxmin("Simferopol")
-
-        # Theft and Loss ratio Pie chart
-        with d7:
-            st.markdown("<br>", unsafe_allow_html=True)
-            region_theftloss_piechart("Simferopol")
-
-        # Total number of cases for Theft and Loss
-        with d8:
-            st.markdown("<br>", unsafe_allow_html=True)
-            region_theftloss_totals("Simferopol")
-
-        # Last 10 years Line chart with Theft and Loss
-        with d9:
-            st.markdown("<center>Last 10 years trend</center>", unsafe_allow_html=True)
-            region_yr_totals_linegrph2012("Simferopol")
-
-        st.markdown("<br>", unsafe_allow_html=True)
-
-        # Zaporizhzhia
-        e1, e2, e3, e4, e5, e6, e7, e8, e9 = st.columns(
-            (0.95, 0.55, 0.35, 0.3, 0.9, 0.32, 0.53, 0.35, 0.75)
-        )
-        # Region name
-        with e1:
-            st.markdown("<br></br>", unsafe_allow_html=True)
-            st.markdown("<font size='6.5'>Zaporizhzhia</font>", unsafe_allow_html=True)
-
-        # Population
-        with e2:
-            st.markdown("<br></br>", unsafe_allow_html=True)
-            region_population_end2021("Zaporizhzhia")
-
-        # Total number of cases for the current year
-        with e3:
-            st.markdown("<br>", unsafe_allow_html=True)
-            region_total_end2021("Zaporizhzhia")
-
-        # Rank among other regions
-        with e4:
-            st.markdown("<br></br>", unsafe_allow_html=True)
-            region_rank_total("Zaporizhzhia")
-
-        # Line chart with all time total
-        with e5:
-            region_total("Zaporizhzhia")
-            region_yr_totals_linegarph("Zaporizhzhia")
-
-        # Maximum and minimum yearly number of records
-        with e6:
-            region_maxmin("Zaporizhzhia")
-
-        # Theft and Loss ratio Pie chart
-        with e7:
-            st.markdown("<br>", unsafe_allow_html=True)
-            region_theftloss_piechart("Zaporizhzhia")
-
-        # Total number of cases for Theft and Loss
-        with e8:
-            st.markdown("<br>", unsafe_allow_html=True)
-            region_theftloss_totals("Zaporizhzhia")
-
-        # Last 10 years Line chart with Theft and Loss
-        with e9:
-            st.markdown("<center>Last 10 years trend</center>", unsafe_allow_html=True)
-            region_yr_totals_linegrph2012("Zaporizhzhia")
-
-    # Western
-    with sec4_tab4:
-        # Chernivtsi
-        a1, a2, a3, a4, a5, a6, a7, a8, a9 = st.columns(
-            (0.95, 0.55, 0.35, 0.3, 0.9, 0.32, 0.53, 0.35, 0.75)
-        )
-        # Region name
-        with a1:
-            st.markdown("<br></br>", unsafe_allow_html=True)
-            st.markdown("<font size='6.5'>Chernivtsi</font>", unsafe_allow_html=True)
-
-        # Population
-        with a2:
-            st.markdown("<br></br>", unsafe_allow_html=True)
-            region_population_end2021("Chernivtsi")
-
-        # Total number of cases for the current year
-        with a3:
-            st.markdown("<br>", unsafe_allow_html=True)
-            region_total_end2021("Chernivtsi")
-
-        # Rank among other regions
-        with a4:
-            st.markdown("<br></br>", unsafe_allow_html=True)
-            region_rank_total("Chernivtsi")
-
-        # Line chart with all time total
-        with a5:
-            region_total("Chernivtsi")
-            region_yr_totals_linegarph("Chernivtsi")
-
-        # Maximum and minimum yearly number of records
-        with a6:
-            region_maxmin("Chernivtsi")
-
-        # Theft and Loss ratio Pie chart
-        with a7:
-            st.markdown("<br>", unsafe_allow_html=True)
-            region_theftloss_piechart("Chernivtsi")
-
-        # Total number of cases for Theft and Loss
-        with a8:
-            st.markdown("<br>", unsafe_allow_html=True)
-            region_theftloss_totals("Chernivtsi")
-
-        # Last 10 years Line chart with Theft and Loss
-        with a9:
-            st.markdown("<center>Last 10 years trend</center>", unsafe_allow_html=True)
-            region_yr_totals_linegrph2012("Chernivtsi")
-
-        st.markdown("<br>", unsafe_allow_html=True)
 
         # Ivano-Frankivsk
-        b1, b2, b3, b4, b5, b6, b7, b8, b9 = st.columns(
-            (0.95, 0.55, 0.35, 0.3, 0.9, 0.32, 0.53, 0.35, 0.75)
+        f1, f2, f3, f4, _ = st.columns(
+            (1,1,1,1,0.1),
         )
-        # Region name
-        with b1:
-            st.markdown("<br></br>", unsafe_allow_html=True)
-            st.markdown(
-                "<font size='6.5'>Ivano-Frankivsk</font>", unsafe_allow_html=True
-            )
-
-        # Population
-        with b2:
-            st.markdown("<br></br>", unsafe_allow_html=True)
-            region_population_end2021("Ivano-Frankivsk")
-
-        # Total number of cases for the current year
-        with b3:
-            st.markdown("<br>", unsafe_allow_html=True)
-            region_total_end2021("Ivano-Frankivsk")
-
-        # Rank among other regions
-        with b4:
-            st.markdown("<br></br>", unsafe_allow_html=True)
-            region_rank_total("Ivano-Frankivsk")
-
-        # Line chart with all time total
-        with b5:
-            region_total("Ivano-Frankivsk")
-            region_yr_totals_linegarph("Ivano-Frankivsk")
-
-        # Maximum and minimum yearly number of records
-        with b6:
-            region_maxmin("Ivano-Frankivsk")
-
-        # Theft and Loss ratio Pie chart
-        with b7:
-            st.markdown("<br>", unsafe_allow_html=True)
-            region_theftloss_piechart("Ivano-Frankivsk")
-
-        # Total number of cases for Theft and Loss
-        with b8:
-            st.markdown("<br>", unsafe_allow_html=True)
-            region_theftloss_totals("Ivano-Frankivsk")
-
-        # Last 10 years Line chart with Theft and Loss
-        with b9:
-            st.markdown("<center>Last 10 years trend</center>", unsafe_allow_html=True)
-            region_yr_totals_linegrph2012("Ivano-Frankivsk")
-
-        st.markdown("<br>", unsafe_allow_html=True)
-
-        # Khmelnytskyi
-        c1, c2, c3, c4, c5, c6, c7, c8, c9 = st.columns(
-            (0.95, 0.55, 0.35, 0.3, 0.9, 0.32, 0.53, 0.35, 0.75)
-        )
-        # Region name
-        with c1:
-            st.markdown("<br></br>", unsafe_allow_html=True)
-            st.markdown("<font size='6.5'>Khmelnytskyi</font>", unsafe_allow_html=True)
-
-        # Population
-        with c2:
-            st.markdown("<br></br>", unsafe_allow_html=True)
-            region_population_end2021("Khmelnytskyi")
-
-        # Total number of cases for the current year
-        with c3:
-            st.markdown("<br>", unsafe_allow_html=True)
-            region_total_end2021("Khmelnytskyi")
-
-        # Rank among other regions
-        with c4:
-            st.markdown("<br></br>", unsafe_allow_html=True)
-            region_rank_total("Khmelnytskyi")
-
-        # Line chart with all time total
-        with c5:
-            region_total("Khmelnytskyi")
-            region_yr_totals_linegarph("Khmelnytskyi")
-
-        # Maximum and minimum yearly number of records
-        with c6:
-            region_maxmin("Khmelnytskyi")
-
-        # Theft and Loss ratio Pie chart
-        with c7:
-            st.markdown("<br>", unsafe_allow_html=True)
-            region_theftloss_piechart("Khmelnytskyi")
-
-        # Total number of cases for Theft and Loss
-        with c8:
-            st.markdown("<br>", unsafe_allow_html=True)
-            region_theftloss_totals("Khmelnytskyi")
-
-        # Last 10 years Line chart with Theft and Loss
-        with c9:
-            st.markdown("<center>Last 10 years trend</center>", unsafe_allow_html=True)
-            region_yr_totals_linegrph2012("Khmelnytskyi")
-
-        st.markdown("<br>", unsafe_allow_html=True)
-
-        # Lutsk
-        d1, d2, d3, d4, d5, d6, d7, d8, d9 = st.columns(
-            (0.95, 0.55, 0.35, 0.3, 0.9, 0.32, 0.53, 0.35, 0.75)
-        )
-        # Region name
-        with d1:
-            st.markdown("<br></br>", unsafe_allow_html=True)
-            st.markdown("<font size='6.5'>Lutsk</font>", unsafe_allow_html=True)
-
-        # Population
-        with d2:
-            st.markdown("<br></br>", unsafe_allow_html=True)
-            region_population_end2021("Lutsk")
-
-        # Total number of cases for the current year
-        with d3:
-            st.markdown("<br>", unsafe_allow_html=True)
-            region_total_end2021("Lutsk")
-
-        # Rank among other regions
-        with d4:
-            st.markdown("<br></br>", unsafe_allow_html=True)
-            region_rank_total("Lutsk")
-
-        # Line chart with all time total
-        with d5:
-            region_total("Lutsk")
-            region_yr_totals_linegarph("Lutsk")
-
-        # Maximum and minimum yearly number of records
-        with d6:
-            region_maxmin("Lutsk")
-
-        # Theft and Loss ratio Pie chart
-        with d7:
-            st.markdown("<br>", unsafe_allow_html=True)
-            region_theftloss_piechart("Lutsk")
-
-        # Total number of cases for Theft and Loss
-        with d8:
-            st.markdown("<br>", unsafe_allow_html=True)
-            region_theftloss_totals("Lutsk")
-
-        # Last 10 years Line chart with Theft and Loss
-        with d9:
-            st.markdown("<center>Last 10 years trend</center>", unsafe_allow_html=True)
-            region_yr_totals_linegrph2012("Lutsk")
-
-        st.markdown("<br>", unsafe_allow_html=True)
-
-        # Lviv
-        e1, e2, e3, e4, e5, e6, e7, e8, e9 = st.columns(
-            (0.95, 0.55, 0.35, 0.3, 0.9, 0.32, 0.53, 0.35, 0.75)
-        )
-        # Region name
-        with e1:
-            st.markdown("<br></br>", unsafe_allow_html=True)
-            st.markdown("<font size='6.5'>Lviv</font>", unsafe_allow_html=True)
-
-        # Population
-        with e2:
-            st.markdown("<br></br>", unsafe_allow_html=True)
-            region_population_end2021("Lviv")
-
-        # Total number of cases for the current year
-        with e3:
-            st.markdown("<br>", unsafe_allow_html=True)
-            region_total_end2021("Lviv")
-
-        # Rank among other regions
-        with e4:
-            st.markdown("<br></br>", unsafe_allow_html=True)
-            region_rank_total("Lviv")
-
-        # Line chart with all time total
-        with e5:
-            region_total("Lviv")
-            region_yr_totals_linegarph("Lviv")
-
-        # Maximum and minimum yearly number of records
-        with e6:
-            region_maxmin("Lviv")
-
-        # Theft and Loss ratio Pie chart
-        with e7:
-            st.markdown("<br>", unsafe_allow_html=True)
-            region_theftloss_piechart("Lviv")
-
-        # Total number of cases for Theft and Loss
-        with e8:
-            st.markdown("<br>", unsafe_allow_html=True)
-            region_theftloss_totals("Lviv")
-
-        # Last 10 years Line chart with Theft and Loss
-        with e9:
-            st.markdown("<center>Last 10 years trend</center>", unsafe_allow_html=True)
-            region_yr_totals_linegrph2012("Lviv")
-
-        st.markdown("<br>", unsafe_allow_html=True)
-
-        # Rivne
-        f1, f2, f3, f4, f5, f6, f7, f8, f9 = st.columns(
-            (0.95, 0.55, 0.35, 0.3, 0.9, 0.32, 0.53, 0.35, 0.75)
-        )
-        # Region name
+    
         with f1:
-            st.markdown("<br></br>", unsafe_allow_html=True)
-            st.markdown("<font size='6.5'>Rivne</font>", unsafe_allow_html=True)
+            generate_rank_region_population("Ivano-Frankivsk")
 
-        # Population
         with f2:
-            st.markdown("<br></br>", unsafe_allow_html=True)
-            region_population_end2021("Rivne")
+            generate_region_total_linechart("Ivano-Frankivsk")
 
-        # Total number of cases for the current year
         with f3:
-            st.markdown("<br>", unsafe_allow_html=True)
-            region_total_end2021("Rivne")
-
-        # Rank among other regions
+            generate_region_weapons_polarchart('Ivano-Frankivsk')
+        
         with f4:
-            st.markdown("<br></br>", unsafe_allow_html=True)
-            region_rank_total("Rivne")
+            generate_region_report_10y_linechart("Ivano-Frankivsk")
 
-        # Line chart with all time total
-        with f5:
-            region_total("Rivne")
-            region_yr_totals_linegarph("Rivne")
-
-        # Maximum and minimum yearly number of records
-        with f6:
-            region_maxmin("Rivne")
-
-        # Theft and Loss ratio Pie chart
-        with f7:
-            st.markdown("<br>", unsafe_allow_html=True)
-            region_theftloss_piechart("Rivne")
-
-        # Total number of cases for Theft and Loss
-        with f8:
-            st.markdown("<br>", unsafe_allow_html=True)
-            region_theftloss_totals("Rivne")
-
-        # Last 10 years Line chart with Theft and Loss
-        with f9:
-            st.markdown("<center>Last 10 years trend</center>", unsafe_allow_html=True)
-            region_yr_totals_linegrph2012("Rivne")
-
-        st.markdown("<br>", unsafe_allow_html=True)
-
-        # Ternopil
-        g1, g2, g3, g4, g5, g6, g7, g8, g9 = st.columns(
-            (0.95, 0.55, 0.35, 0.3, 0.9, 0.32, 0.53, 0.35, 0.75)
-        )
-        # Region name
-        with g1:
-            st.markdown("<br></br>", unsafe_allow_html=True)
-            st.markdown("<font size='6.5'>Ternopil</font>", unsafe_allow_html=True)
-
-        # Population
-        with g2:
-            st.markdown("<br></br>", unsafe_allow_html=True)
-            region_population_end2021("Ternopil")
-
-        # Total number of cases for the current year
-        with g3:
-            st.markdown("<br>", unsafe_allow_html=True)
-            region_total_end2021("Ternopil")
-
-        # Rank among other regions
-        with g4:
-            st.markdown("<br></br>", unsafe_allow_html=True)
-            region_rank_total("Ternopil")
-
-        # Line chart with all time total
-        with g5:
-            region_total("Ternopil")
-            region_yr_totals_linegarph("Ternopil")
-
-        # Maximum and minimum yearly number of records
-        with g6:
-            region_maxmin("Ternopil")
-
-        # Theft and Loss ratio Pie chart
-        with g7:
-            st.markdown("<br>", unsafe_allow_html=True)
-            region_theftloss_piechart("Ternopil")
-
-        # Total number of cases for Theft and Loss
-        with g8:
-            st.markdown("<br>", unsafe_allow_html=True)
-            region_theftloss_totals("Ternopil")
-
-        # Last 10 years Line chart with Theft and Loss
-        with g9:
-            st.markdown("<center>Last 10 years trend</center>", unsafe_allow_html=True)
-            region_yr_totals_linegrph2012("Ternopil")
-
-        st.markdown("<br>", unsafe_allow_html=True)
-
-        # Uzhhorod
-        h1, h2, h3, h4, h5, h6, h7, h8, h9 = st.columns(
-            (0.95, 0.55, 0.35, 0.3, 0.9, 0.32, 0.53, 0.35, 0.75)
-        )
-        # Region name
-        with h1:
-            st.markdown("<br></br>", unsafe_allow_html=True)
-            st.markdown("<font size='6.5'>Uzhhorod</font>", unsafe_allow_html=True)
-
-        # Population
-        with h2:
-            st.markdown("<br></br>", unsafe_allow_html=True)
-            region_population_end2021("Uzhhorod")
-
-        # Total number of cases for the current year
-        with h3:
-            st.markdown("<br>", unsafe_allow_html=True)
-            region_total_end2021("Uzhhorod")
-
-        # Rank among other regions
-        with h4:
-            st.markdown("<br></br>", unsafe_allow_html=True)
-            region_rank_total("Uzhhorod")
-
-        # Line chart with all time total
-        with h5:
-            region_total("Uzhhorod")
-            region_yr_totals_linegarph("Uzhhorod")
-
-        # Maximum and minimum yearly number of records
-        with h6:
-            region_maxmin("Uzhhorod")
-
-        # Theft and Loss ratio Pie chart
-        with h7:
-            st.markdown("<br>", unsafe_allow_html=True)
-            region_theftloss_piechart("Uzhhorod")
-
-        # Total number of cases for Theft and Loss
-        with h8:
-            st.markdown("<br>", unsafe_allow_html=True)
-            region_theftloss_totals("Uzhhorod")
-
-        # Last 10 years Line chart with Theft and Loss
-        with h9:
-            st.markdown("<center>Last 10 years trend</center>", unsafe_allow_html=True)
-            region_yr_totals_linegrph2012("Uzhhorod")
-
-    # Eastern
-    with sec4_tab5:
-        # Donetsk
-        a1, a2, a3, a4, a5, a6, a7, a8, a9 = st.columns(
-            (0.95, 0.55, 0.35, 0.3, 0.9, 0.32, 0.53, 0.35, 0.75)
-        )
-        # Region name
-        with a1:
-            st.markdown("<br></br>", unsafe_allow_html=True)
-            st.markdown("<font size='6.5'>Donetsk</font>", unsafe_allow_html=True)
-
-        # Population
-        with a2:
-            st.markdown("<br></br>", unsafe_allow_html=True)
-            region_population_end2021("Donetsk")
-
-        # Total number of cases for the current year
-        with a3:
-            st.markdown("<br>", unsafe_allow_html=True)
-            region_total_end2021("Donetsk")
-
-        # Rank among other regions
-        with a4:
-            st.markdown("<br></br>", unsafe_allow_html=True)
-            region_rank_total("Donetsk")
-
-        # Line chart with all time total
-        with a5:
-            region_total("Donetsk")
-            region_yr_totals_linegarph("Donetsk")
-
-        # Maximum and minimum yearly number of records
-        with a6:
-            region_maxmin("Donetsk")
-
-        # Theft and Loss ratio Pie chart
-        with a7:
-            st.markdown("<br>", unsafe_allow_html=True)
-            region_theftloss_piechart("Donetsk")
-
-        # Total number of cases for Theft and Loss
-        with a8:
-            st.markdown("<br>", unsafe_allow_html=True)
-            region_theftloss_totals("Donetsk")
-
-        # Last 10 years Line chart with Theft and Loss
-        with a9:
-            st.markdown("<center>Last 10 years trend</center>", unsafe_allow_html=True)
-            region_yr_totals_linegrph2012("Donetsk")
-
-        st.markdown("<br>", unsafe_allow_html=True)
 
         # Kharkiv
-        b1, b2, b3, b4, b5, b6, b7, b8, b9 = st.columns(
-            (0.95, 0.55, 0.35, 0.3, 0.9, 0.32, 0.53, 0.35, 0.75)
+        g1, g2, g3, g4, _ = st.columns(
+            (1,1,1,1,0.1),
         )
-        # Region name
-        with b1:
-            st.markdown("<br></br>", unsafe_allow_html=True)
-            st.markdown("<font size='6.5'>Kharkiv</font>", unsafe_allow_html=True)
+    
+        with g1:
+            generate_rank_region_population("Kharkiv")
 
-        # Population
-        with b2:
-            st.markdown("<br></br>", unsafe_allow_html=True)
-            region_population_end2021("Kharkiv")
+        with g2:
+            generate_region_total_linechart("Kharkiv")
 
-        # Total number of cases for the current year
-        with b3:
-            st.markdown("<br>", unsafe_allow_html=True)
-            region_total_end2021("Kharkiv")
+        with g3:
+            generate_region_weapons_polarchart('Kharkiv')
+        
+        with g4:
+            generate_region_report_10y_linechart("Kharkiv")
 
-        # Rank among other regions
-        with b4:
-            st.markdown("<br></br>", unsafe_allow_html=True)
-            region_rank_total("Kharkiv")
 
-        # Line chart with all time total
-        with b5:
-            region_total("Kharkiv")
-            region_yr_totals_linegarph("Kharkiv")
+        # Kherson
+        h1, h2, h3, h4, _ = st.columns(
+            (1,1,1,1,0.1),
+        )
+    
+        with h1:
+            generate_rank_region_population("Kherson")
 
-        # Maximum and minimum yearly number of records
-        with b6:
-            region_maxmin("Kharkiv")
+        with h2:
+            generate_region_total_linechart("Kherson")
 
-        # Theft and Loss ratio Pie chart
-        with b7:
-            st.markdown("<br>", unsafe_allow_html=True)
-            region_theftloss_piechart("Kharkiv")
+        with h3:
+            generate_region_weapons_polarchart('Kherson')
+        
+        with h4:
+            generate_region_report_10y_linechart("Kherson")
 
-        # Total number of cases for Theft and Loss
-        with b8:
-            st.markdown("<br>", unsafe_allow_html=True)
-            region_theftloss_totals("Kharkiv")
 
-        # Last 10 years Line chart with Theft and Loss
-        with b9:
-            st.markdown("<center>Last 10 years trend</center>", unsafe_allow_html=True)
-            region_yr_totals_linegrph2012("Kharkiv")
+        # Khmelnytskyi
+        i1, i2, i3, i4, _ = st.columns(
+            (1,1,1,1,0.1),
+        )
+    
+        with i1:
+            generate_rank_region_population("Khmelnytskyi")
 
-        st.markdown("<br>", unsafe_allow_html=True)
+        with i2:
+            generate_region_total_linechart("Khmelnytskyi")
+
+        with i3:
+            generate_region_weapons_polarchart('Khmelnytskyi')
+        
+        with i4:
+            generate_region_report_10y_linechart("Khmelnytskyi")
+
+
+        # Kropyvnytskyi
+        j1, j2, j3, j4, _ = st.columns(
+            (1,1,1,1,0.1),
+        )
+    
+        with j1:
+            generate_rank_region_population("Kropyvnytskyi")
+
+        with j2:
+            generate_region_total_linechart("Kropyvnytskyi")
+
+        with j3:
+            generate_region_weapons_polarchart('Kropyvnytskyi')
+        
+        with j4:
+            generate_region_report_10y_linechart("Kropyvnytskyi")
+
+
+        # Kyiv
+        k1, k2, k3, k4, _ = st.columns(
+            (1,1,1,1,0.1),
+        )
+    
+        with k1:
+            generate_rank_region_population("Kyiv")
+
+        with k2:
+            generate_region_total_linechart("Kyiv")
+
+        with k3:
+            generate_region_weapons_polarchart('Kyiv')
+        
+        with k4:
+            generate_region_report_10y_linechart("Kyiv")
+
 
         # Luhansk
-        c1, c2, c3, c4, c5, c6, c7, c8, c9 = st.columns(
-            (0.95, 0.55, 0.35, 0.3, 0.9, 0.32, 0.53, 0.35, 0.75)
+        l1, l2, l3, l4, _ = st.columns(
+            (1,1,1,1,0.1),
         )
-        # Region name
-        with c1:
-            st.markdown("<br></br>", unsafe_allow_html=True)
-            st.markdown("<font size='6.5'>Luhansk</font>", unsafe_allow_html=True)
+    
+        with l1:
+            generate_rank_region_population("Luhansk")
 
-        # Population
-        with c2:
-            st.markdown("<br></br>", unsafe_allow_html=True)
-            region_population_end2021("Luhansk")
+        with l2:
+            generate_region_total_linechart("Luhansk")
 
-        # Total number of cases for the current year
-        with c3:
-            st.markdown("<br>", unsafe_allow_html=True)
-            region_total_end2021("Luhansk")
+        with l3:
+            generate_region_weapons_polarchart('Luhansk')
+        
+        with l4:
+            generate_region_report_10y_linechart("Luhansk")
 
-        # Rank among other regions
-        with c4:
-            st.markdown("<br></br>", unsafe_allow_html=True)
-            region_rank_total("Luhansk")
 
-        # Line chart with all time total
-        with c5:
-            region_total("Luhansk")
-            region_yr_totals_linegarph("Luhansk")
+        # Lutsk
+        m1, m2, m3, m4, _ = st.columns(
+            (1,1,1,1,0.1),
+        )
+    
+        with m1:
+            generate_rank_region_population("Lutsk")
 
-        # Maximum and minimum yearly number of records
-        with c6:
-            region_maxmin("Luhansk")
+        with m2:
+            generate_region_total_linechart("Lutsk")
 
-        # Theft and Loss ratio Pie chart
-        with c7:
-            st.markdown("<br>", unsafe_allow_html=True)
-            region_theftloss_piechart("Luhansk")
+        with m3:
+            generate_region_weapons_polarchart('Lutsk')
+        
+        with m4:
+            generate_region_report_10y_linechart("Lutsk")
 
-        # Total number of cases for Theft and Loss
-        with c8:
-            st.markdown("<br>", unsafe_allow_html=True)
-            region_theftloss_totals("Luhansk")
 
-        # Last 10 years Line chart with Theft and Loss
-        with c9:
-            st.markdown("<center>Last 10 years trend</center>", unsafe_allow_html=True)
-            region_yr_totals_linegrph2012("Luhansk")
+        # Lviv
+        n1, n2, n3, n4, _ = st.columns(
+            (1,1,1,1,0.1),
+        )
+    
+        with n1:
+            generate_rank_region_population("Lviv")
 
-    # ========================#
-    # --------FOOTER--------#
-    footer = """
-        <style>
-        .footer {
-        position: fixed;
-        left: 0;
-        bottom: 0;
-        width: 100%;
-        padding: 4px;
-        background-color: #292929;
-        color: #d5d5d5;
-        text-align: center;
-        }
-        </style>
-        <div class="footer">
-        Project by <a style=text-align: center; href="https://github.com/cyterat"><img src="https://images2.imgbox.com/3f/e6/RqycpnL4_o.png" alt="cyterat" width="25" height="30"></a>
-        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-        Made with <a style=text-align: center; href="https://streamlit.io/"><img src="https://images2.imgbox.com/25/4b/TEp8DFI1_o.png" alt="streamlit" width="25" height="30"></a>
-        </div>
-    """
-    st.markdown(footer, unsafe_allow_html=True)
+        with n2:
+            generate_region_total_linechart("Lviv")
 
-st.success("")
+        with n3:
+            generate_region_weapons_polarchart('Lviv')
+        
+        with n4:
+            generate_region_report_10y_linechart("Lviv")
 
-# Spinner load succesful (hide)
-hide_spinner_succes = """
-<style>
-div.st-ae {
-    -webkit-tap-highlight-color: rgba(0, 0, 0, 0);
-    font-size: 0rem;
-    line-height: 0;
-    height: 0;
-    padding-top: 0px;
-    padding-right: 0px;
-    padding-bottom: 0px;
-    padding-left: 0px;
-    margin-top: 0px;
-    margin-bottom: 0px;
-    border-top-left-radius: 0rem;
-    border-top-right-radius: 0rem;
-    border-bottom-right-radius: 0rem;
-    border-bottom-left-radius: 0rem;
-    box-shadow: none;
-    border: 0px;
-    opacity: 0;
-    }
- </style>
-"""
-st.markdown(hide_spinner_succes, unsafe_allow_html=True)
+
+        # Mykolaiv
+        o1, o2, o3, o4, _ = st.columns(
+            (1,1,1,1,0.1),
+        )
+    
+        with o1:
+            generate_rank_region_population("Mykolaiv")
+
+        with o2:
+            generate_region_total_linechart("Mykolaiv")
+
+        with o3:
+            generate_region_weapons_polarchart('Mykolaiv')
+        
+        with o4:
+            generate_region_report_10y_linechart("Mykolaiv")
+
+
+        # Odesa
+        p1, p2, p3, p4, _ = st.columns(
+            (1,1,1,1,0.1),
+        )
+    
+        with p1:
+            generate_rank_region_population("Odesa")
+
+        with p2:
+            generate_region_total_linechart("Odesa")
+
+        with p3:
+            generate_region_weapons_polarchart('Odesa')
+        
+        with p4:
+            generate_region_report_10y_linechart("Odesa")
+
+
+        # Poltava
+        q1, q2, q3, q4, _ = st.columns(
+            (1,1,1,1,0.1),
+        )
+    
+        with q1:
+            generate_rank_region_population("Poltava")
+
+        with q2:
+            generate_region_total_linechart("Poltava")
+
+        with q3:
+            generate_region_weapons_polarchart('Poltava')
+        
+        with q4:
+            generate_region_report_10y_linechart("Poltava")
+
+
+        # Rivne
+        r1, r2, r3, r4, _ = st.columns(
+            (1,1,1,1,0.1),
+        )
+    
+        with r1:
+            generate_rank_region_population("Rivne")
+
+        with r2:
+            generate_region_total_linechart("Rivne")
+
+        with r3:
+            generate_region_weapons_polarchart('Rivne')
+        
+        with r4:
+            generate_region_report_10y_linechart("Rivne")
+
+
+        # Simferopol
+        s1, s2, s3, s4, _ = st.columns(
+            (1,1,1,1,0.1),
+        )
+    
+        with s1:
+            generate_rank_region_population("Simferopol")
+
+        with s2:
+            generate_region_total_linechart("Simferopol")
+
+        with s3:
+            generate_region_weapons_polarchart('Simferopol')
+        
+        with s4:
+            generate_region_report_10y_linechart("Simferopol")
+
+
+        # Sumy
+        t1, t2, t3, t4, _ = st.columns(
+            (1,1,1,1,0.1),
+        )
+    
+        with t1:
+            generate_rank_region_population("Sumy")
+
+        with t2:
+            generate_region_total_linechart("Sumy")
+
+        with t3:
+            generate_region_weapons_polarchart('Sumy')
+        
+        with t4:
+            generate_region_report_10y_linechart("Sumy")
+
+
+        # Ternopil
+        u1, u2, u3, u4, _ = st.columns(
+            (1,1,1,1,0.1),
+        )
+    
+        with u1:
+            generate_rank_region_population("Ternopil")
+
+        with u2:
+            generate_region_total_linechart("Ternopil")
+
+        with u3:
+            generate_region_weapons_polarchart('Ternopil')
+        
+        with u4:
+            generate_region_report_10y_linechart("Ternopil")
+
+
+        # Uzhhorod
+        v1, v2, v3, v4, _ = st.columns(
+            (1,1,1,1,0.1),
+        )
+    
+        with v1:
+            generate_rank_region_population("Uzhhorod")
+
+        with v2:
+            generate_region_total_linechart("Uzhhorod")
+
+        with v3:
+            generate_region_weapons_polarchart('Uzhhorod')
+        
+        with v4:
+            generate_region_report_10y_linechart("Uzhhorod")
+
+
+        # Vinnytsia
+        w1, w2, w3, w4, _ = st.columns(
+            (1,1,1,1,0.1),
+        )
+    
+        with w1:
+            generate_rank_region_population("Vinnytsia")
+
+        with w2:
+            generate_region_total_linechart("Vinnytsia")
+
+        with w3:
+            generate_region_weapons_polarchart('Vinnytsia')
+        
+        with w4:
+            generate_region_report_10y_linechart("Vinnytsia")
+
+
+        # Zaporizhzhia
+        x1, x2, x3, x4, _ = st.columns(
+            (1,1,1,1,0.1),
+        )
+    
+        with x1:
+            generate_rank_region_population("Zaporizhzhia")
+
+        with x2:
+            generate_region_total_linechart("Zaporizhzhia")
+
+        with x3:
+            generate_region_weapons_polarchart('Zaporizhzhia')
+        
+        with x4:
+            generate_region_report_10y_linechart("Zaporizhzhia")
+
+
+        # Zhytomyr
+        y1, y2, y3, y4, _ = st.columns(
+            (1,1,1,1,0.1),
+        )
+    
+        with y1:
+            generate_rank_region_population("Zhytomyr")
+
+        with y2:
+            generate_region_total_linechart("Zhytomyr")
+
+        with y3:
+            generate_region_weapons_polarchart('Zhytomyr')
+        
+        with y4:
+            generate_region_report_10y_linechart("Zhytomyr")

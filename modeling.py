@@ -1,237 +1,307 @@
 import pandas as pd
 import numpy as np
 
-import warnings
-warnings.simplefilter(action='ignore', category=FutureWarning)
-
-# Boilerplate aggregation-functions
-from common.eda import aggregator, country_stats
-
 
 def import_data():
-    try:
-        # File object
-        file = "assets/ua-mia-weapons.parquet.gzip"
+    print('\n* Import "ua-mia-weapons.parquet.gzip" file...')
 
-        # Reading the parquet output into a DataFrame
-        df = pd.read_parquet(file)
-        
-    except Exception as err:
-        print(f"Unexpected {err}, {type(err)}")
+    file = "assets/ua-mia-weapons.parquet.gzip"
+
+    df = pd.read_parquet(file)
     
     return df
 
 
-def agg_weapon_ctgr():
-    print('\n* Create "agg-weapon-ctgr.parquet.gzip" file...')
+def model_month_total():
+    print('\n* Create "month-total" file...')
 
-    try:
-        tmp_df = (
-            aggregator(df, frequency='Y')
-            .groupby(['weaponcategory'])['frequency']
-            .sum()
-            .reset_index(name='total')
-            .set_index('weaponcategory')
+    tmp_df = (
+        df
+        .groupby(pd.Grouper(key='date',freq='M'))['report']
+        .count()
+        .reset_index()
+        .rename(columns={"report": "total"})
+        .astype({
+            "date":"datetime64[ns]",
+            "total":"int32"
+            })
+        )
+
+    print('File created')
+    tmp_df.to_parquet('assets/models/month-total.parquet.gzip', engine='pyarrow', compression='gzip', index=False)
+
+
+def model_date_report_total():
+    print('\n* Create "date-report-total" file...')
+
+    tmp_df = (
+        df
+        .groupby([pd.Grouper(key='date',freq='D'),'report'])['region']
+        .count()
+        .reset_index()
+        .rename(columns={"region": "total"})
+        .astype({
+            "total":"int32",
+            "date":"datetime64[ns]",
+            "report":"string"
+            })
+        )
+
+    tmp_df.to_parquet('assets/models/date-report-total.parquet.gzip', engine='pyarrow', compression='gzip', index=False)
+    print('File created')
+
+
+def model_weaponcategory_total():
+    print('\n* Create "weaponcategory-total.parquet.gzip" file...')
+
+    tmp_df = (
+        df
+        .groupby(['weaponcategory'])['report']
+        .count()
+        .reset_index()
+        .rename(columns={'report':'total'})
+        .assign(
+            loss = (
+                df[df['report']=='Loss']
+                .groupby(['weaponcategory'])['report']
+                .count()
+                .values
+                )
             )
-
-        tmp_df = tmp_df.sort_values(by='total', ascending=False).rename_axis(index=None)
-        tmp_df = tmp_df.assign(percentage=tmp_df.div(tmp_df.sum(axis=0), axis=1))
-    
-    except Exception as err:
-        print(f"Unexpected {err}, {type(err)}")
-
-    
-    print('File created')
-    tmp_df.to_parquet('assets/models/agg-weapon-ctgr.parquet.gzip', engine='pyarrow', compression='gzip', index=True)
-
-
-def c_stats():
-    print('\n* Create "country-stats.parquet.gzip" file...')
-
-    try:
-        tmp_df = country_stats(aggregator(df, pivot=True))
-
-    except Exception as err:
-        print(f"Unexpected {err}, {type(err)}")
-    
-
-    print('File created')
-    tmp_df.to_parquet('assets/models/country-stats.parquet.gzip', engine='pyarrow', compression='gzip', index=False)
-
-
-def region_tl():
-    print('\n* Create "regions-tl" file...')
-
-    try:
-        tmp_df = (
-            aggregator(df, pivot=True)
-            .groupby(['region','date'])['frequency', 'loss','theft']
-            .sum()
-            .reset_index()
-            .rename(columns={'frequency':'total'})
+        .assign(
+            theft = (
+                df[df['report']=='Theft']
+                .groupby(['weaponcategory'])['report']
+                .count()
+                .values
+                )
             )
+        .astype({
+            'weaponcategory':'string',
+            'total':'int32',
+            'loss':'int32',
+            'theft':'int32'
+            })
+        .sort_values(
+            'total',
+            ascending=False,
+            ignore_index=True
+            )
+        )
+    
+    print('File created')
+    tmp_df.to_parquet('assets/models/weaponcategory-total.parquet.gzip', engine='pyarrow', compression='gzip', index=False)
 
-    except Exception as err:
-        print(f"Unexpected {err}, {type(err)}")
+
+def model_region_total():
+    print('\n* Create "region-total.parquet.gzip" file...')
+
+    tmp_df = (
+        df
+        .groupby(['region'])['report']
+        .count()
+        .reset_index()
+        .rename(columns={'report':'total'})
+        .assign(
+            loss = (
+                df[df['report']=='Loss']
+                .groupby(['region'])['report']
+                .count()
+                .values
+                )
+            )
+        .assign(
+            theft = (
+                df[df['report']=='Theft']
+                .groupby(['region'])['report']
+                .count()
+                .values
+                )
+            )
+        .astype({
+            'region':'string',
+            'total':'int32',
+            'loss':'int32',
+            'theft':'int32'
+            })
+        .sort_values(
+            'total',
+            ascending=False,
+            ignore_index=True
+            )
+        )
+    
+    tmp_df = (
+        tmp_df
+        .assign(total_pct=tmp_df['total'] / tmp_df['total'].sum())
+        .assign(loss_pct=tmp_df['loss'] / tmp_df['total'])
+        .assign(theft_pct=tmp_df['theft'] / tmp_df['total'])
+        .astype({
+            'total_pct':'float32',
+            'loss_pct':'float32',
+            'theft_pct':'float32',
+            })
+        )
+
+    print('File created')
+    tmp_df.to_parquet('assets/models/region-total.parquet.gzip', engine='pyarrow', compression='gzip', index=False)
+
+
+def model_region_year_total():
+    print('\n* Create "region-year-total" file...')
+
+    tmp_df = (
+        df
+        .groupby(['region', pd.Grouper(key='date',freq='Y'),'report'])['weaponcategory']
+        .count()
+        .reset_index()
+        .rename(columns={'weaponcategory':'total'})
+        .pivot_table(
+            index=['region','date'],
+            columns="report",
+            values="total"
+            )
+        .assign(
+            total = (
+                df
+                .groupby(['region', pd.Grouper(key='date',freq='Y')])['report']
+                .count()
+                .values
+                )
+            )
+        .fillna(0)
+        .reset_index()
+        .astype({
+            'region':'string',
+            'date':'datetime64[ns]',
+            'Loss':'int32',
+            'Theft':'int32',
+            'total':'int32'
+            })
+        .rename(columns={
+            'Loss':'loss',
+            'Theft':'theft'
+            })   
+        )
+    
+    tmp_df = (
+        tmp_df
+        .assign(loss_pct=tmp_df['loss']/tmp_df['total'])
+        .assign(theft_pct=tmp_df['theft']/tmp_df['total'])
+        .assign(total_pct=tmp_df['total']/tmp_df['total'].sum())
+        .astype({
+            'loss_pct':'float32',
+            'theft_pct':'float32',
+            'total_pct':'float32'
+            })
+        )
 
 
     print('File created')
-    tmp_df.to_parquet('assets/models/regions-tl.parquet.gzip', engine='pyarrow', compression='gzip', index=False)
+    tmp_df.to_parquet('assets/models/region-year-total.parquet.gzip', engine='pyarrow', compression='gzip', index=False)
    
 
-def cat_ua_df():
-    print('\n* Create "cat-ua-df" file...')
+def model_region_weaponcategory_total():
+    print('\n* Create "region-weaponcategory-total" file...') 
 
-    try:
-        tmp_df = aggregator(df, frequency='Y')
-
-        tmp_df = (
-            tmp_df
-            .groupby(['region','weaponcategory'])
-            .agg({'frequency':['sum']})
-            .fillna(0)
-            .xs("sum", level=1, axis=1, drop_level=True)
-            .reset_index()
-        )
-    
-        # Exclude weapon categories with no records in their respective region
-        tmp_df = tmp_df[tmp_df['frequency']!=0]
-
-        # Weapon categories ranks in their region (Rank 1 == weapon with the largest number of records in a region)
-        tmp_df['local_rank'] = (
-            tmp_df
-            .groupby(['region'])['frequency']
-            .rank(method='dense', ascending=False)
-            .astype('int8')
+    tmp_df = (
+        df
+        .groupby(['region','weaponcategory'])['report']
+        .count()
+        .reset_index()
+        .rename(columns={'report':'total'})
+        .astype({
+            'region':'string',
+            'weaponcategory':'string',
+            'total':'int32'
+            })
+        .fillna(0)
         )
 
+    # Exclude weapon categories with no records in their respective region
+    #tmp_df = tmp_df[tmp_df['total']!=0]
+
+    tmp_df = (
+        tmp_df
+        # Weapon categories ranks in their region
+        # (Rank 1 == weapon with the largest number of records in a region)
+        .assign(
+            local_rank=(
+                tmp_df
+                .groupby(['region'])['total']
+                .rank(method='dense', ascending=False)
+                .astype('int16')
+                )
+            )
         # Regional weapon categories ranks among all other regions in the country 
         # (Rank 1 == weapon category of a specific region has the largest number of records in the country)
-        tmp_df['country_rank'] = (
-            tmp_df['frequency']
-            .rank(method='dense', ascending=False)
-            .astype('int32')
-        )
-
-        # Log (base 100) of each weapon category in every region (used for marker sizes in the visualisation)
-        tmp_df['freqLog100'] = np.log(tmp_df['frequency']) / np.log(100) #log base 100
-
-        # Total number of cases in a region
-        tmp_df = (
-            tmp_df
-            .join(
-                tmp_df.groupby(['region']).agg({'frequency':'sum'}), 
-                on='region',
-                how='inner',
-                rsuffix='r'
-            )
-            .rename(
-                columns={'frequencyr':'total_region'}
+        .assign(
+            country_rank=(
+                tmp_df['total']
+                .rank(method='dense', ascending=False)
+                .astype('int16')
                 )
+            )
+        # Log (base 100) of each weapon category in every region 
+        # (used for marker sizes in the scattertable visualisation)
+        .assign(
+            total_log100 = (np.log(tmp_df['total']) / np.log(100)).astype('float32')
+            )
+        # Total number of cases in the region
+        .assign(
+            total_region = (
+                tmp_df
+                .groupby(['region'])['total']
+                .transform(sum)
+                .astype('int32')
+                )
+            )
+        # Total number of cases in the country
+        .assign(
+            total_country = (
+                tmp_df['total']
+                .sum()
+                .astype('int64')
+                )
+            )
+        .fillna(0)
         )
 
-        # Total number of cases in the country
-        tmp_df['total_country'] = tmp_df['frequency'].sum().astype('int64') #'freqCountry'
-        
-        # Sorting values by region and weapon category
-        tmp_df = tmp_df.sort_values(['region', 'weaponcategory']).reset_index(drop=True)
-
-    except Exception as err:
-        print(f"Unexpected {err}, {type(err)}")
-
-
     print('File created')
-    tmp_df.to_parquet('assets/models/cat-ua-df.parquet.gzip', engine='pyarrow', compression='gzip', index=False)
+    tmp_df.to_parquet('assets/models/region-weaponcategory-total.parquet.gzip', engine='pyarrow', compression='gzip', index=False)
 
 
-def histogram():
-    print('\n* Create "histogram" file...')
+def model_report_total():
+    print('\n* Create "report-total" file...')
 
-    try:
-        tmp_df = (
-            aggregator(df, 'M')
-            .groupby(['date'])
-            .sum(numeric_only=True)
-            .reset_index()
-            )
-
-    except Exception as err:
-        print(f"Unexpected {err}, {type(err)}")
-
-
-    print('File created')
-    tmp_df.to_parquet('assets/models/histogram.parquet.gzip', engine='pyarrow', compression='gzip', index=True)
-
-
-def yr_weekly_scats():
-    print('\n* Create "yr-weekly-scats" file...')
-
-    try:
-        tmp_df = (
-            aggregator(df, 'W')
-            .groupby(['date', 'report'])
-            .sum(numeric_only=True)
-            .reset_index()
-            )
-    
-    except Exception as err:
-        print(f"Unexpected {err}, {type(err)}")
-
-
-    print('File created')
-    tmp_df.to_parquet('assets/models/yr-weekly-scats.parquet.gzip', engine='pyarrow', compression='gzip', index=True)
-
-
-def top5():
-    print('\n* Create "top5" file...')
-
-    try:
-        tmp_df = country_stats(aggregator(df, pivot=True)).set_index('region').nlargest(5,'frequency')
-        tmp_df = tmp_df.iloc[tmp_df['frequency'].argsort()[::-1],:].reset_index()
-        tmp_df = tmp_df.set_index('region').iloc[:,:2]
-        tmp_df = tmp_df.iloc[::-1,::-1]
-    
-    except Exception as err:
-        print(f"Unexpected {err}, {type(err)}")
-
-    print('File created')
-    tmp_df.to_parquet('assets/models/top5.parquet.gzip', engine='pyarrow', compression='gzip', index=True)
-
-
-def tls_ratio():
-    print('\n* Create "tls-ratio" file...')
-
-    try:
-        tmp_df = (
-            aggregator(df)
-            .groupby(["report"])
-            .agg('sum', numeric_only=True)
-            .reset_index()
-            )
-    
-    except Exception as err:
-        print(f"Unexpected {err}, {type(err)}")
+    tmp_df = (
+        df
+        .groupby('report')['date']
+        .count()
+        .reset_index()
+        .rename(columns={'date':'total'})
+        .astype({
+            'report':'string',
+            'total':'int32'
+            })
+        )
 
     print('File created\n')
-    tmp_df.to_parquet('assets/models/tls-ratio.parquet.gzip', engine='pyarrow', compression='gzip', index=True)
-
-
+    tmp_df.to_parquet('assets/models/report-total.parquet.gzip', engine='pyarrow', compression='gzip', index=True)
 
 
 if __name__=='__main__':
 
     df = import_data()
+    assert df.columns.isin(['date','region','report','weaponcategory']).all(), "DataFrame should have the following columns: 'date', 'region', 'report', 'weaponcategory'. Check pipeline."
 
-    assert set(df.columns) == set(['date','region','report','weaponcategory']), "DataFrame should have the following columns: 'date', 'region', 'report', 'weaponcategory'"
+    model_month_total()
+    model_date_report_total()
+    model_weaponcategory_total()
+    model_region_total()
+    model_region_year_total()
+    model_region_weaponcategory_total()
+    model_report_total()
 
-    agg_weapon_ctgr()
-    c_stats()
-    region_tl()
-    cat_ua_df()
-    histogram()
-    yr_weekly_scats()
-    top5()
-    tls_ratio()
-
-    print('Finished running the script\n')
+    print('Finished running the script\n✅ Models successfuly created\n')
     
