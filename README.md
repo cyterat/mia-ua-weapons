@@ -19,7 +19,7 @@
 ## 🚧 Version 1.0.0 (Latest)
 
 * The processes of cleaning and modeling data have been automated using GitHub Actions.
-* Layout and separate elements have been improved and are now stored in a separate css file.
+* Layout and style of separate elements have been improved and are now stored in a separate css file.
 * Data models and elements relationship graph has been added.
 * Visual elements gave been reorganized into separate files representing their type.
 * Minor code refactoring and readability improvements were made.
