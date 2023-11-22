@@ -16,10 +16,14 @@
 
 * The **original dataset** can be accessed at [data.gov.ua](https://data.gov.ua/en/dataset/5e7a9e93-e4ae-408a-8b99-6a21bfa9c12a/resource/1fcab772-0b3c-4938-8f72-e60db343cbe5)
 
-## 🚧Updates
+## 🚧 Version 1.0.0 (Latest)
 
-* ~~Currently working on a more automated method of cleaning and modeling data based on the existing jupyter notebooks.~~
-* ~~Currently working on an updated layout and overall visibility of different elements.~~
+* The processes of cleaning and modeling data have been automated using GitHub Actions.
+* Layout and separate elements have been improved and are now stored in a separate css file.
+* Data models and elements relationship graph has been added.
+* Visual elements gave been reorganized into separate files representing their type.
+* Minor code refactoring and readability improvements were made.
+* Python 3.11.4 compatability issues solved.
 
 ## 🛠 Libraries
 
