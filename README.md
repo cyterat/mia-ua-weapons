@@ -20,7 +20,7 @@
 
 * The processes of cleaning and modeling data have been automated using GitHub Actions.
 * Layout and style of separate elements have been improved and are now stored in a separate css file.
-* Data models and elements relationship graph has been added.
+* Data models and elements relationship graph has been [added](https://github.com/cyterat/mia-ua-weapons/blob/master/assets/ua-mia-weapons-relationships.png).
 * Visual elements gave been reorganized into separate files representing their type.
 * Minor code refactoring and readability improvements were made.
 * Python 3.11.4 compatability issues solved.
