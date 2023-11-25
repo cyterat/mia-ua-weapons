@@ -1,18 +1,24 @@
 import pandas as pd
 import numpy as np
-import json
-import requests
-
+from subprocess import call
 
 def download_json():
     print("\n0/7 Download .json file...")
 
-    data = requests.get(
-        "https://data.gov.ua/dataset/d0af9ba0-08b3-4bca-8508-02cffeaae8fd/resource/1fcab772-0b3c-4938-8f72-e60db343cbe5/download/weaponswanted.json"
-    ).json()
-
-    with open("assets/weapons-wanted.json", "w") as f:
-        json.dump(data, f)
+    file_url = "https://data.gov.ua/dataset/d0af9ba0-08b3-4bca-8508-02cffeaae8fd/resource/1fcab772-0b3c-4938-8f72-e60db343cbe5/download/weaponswanted.json"
+    output_file_name = "weapons-wanted.json"
+    call(["curl", file_url, 
+        '-H', 'Connection: keep-alive', 
+        '-H', 'Cache-Control: max-age=0', 
+        '-H', 'Upgrade-Insecure-Requests: 1', 
+        '-H', 'User-Agent: Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/77.0.3865.90 Safari/537.36', 
+        '-H', 'Sec-Fetch-Mode: navigate', 
+        '-H', 'Accept: text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3', 
+        '-H', 'Sec-Fetch-Site: cross-site', 
+        '-H', 'Accept-Encoding: gzip, deflate, br', 
+        '-H', 'Accept-Language: en-US,en;q=0.9,bn;q=0.8', 
+        '-H', 'Cookie: bbb=rd102o00000000000000000000ffff978432aao80', 
+        '--output', output_file_name])
 
     print(f"☑️ File Downloaded: assets/weapons-wanted.json\n")
 
