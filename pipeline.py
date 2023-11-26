@@ -6,9 +6,10 @@ def download_json():
     print("\n0/7 Download .json file...")
 
     file_url = "https://data.gov.ua/dataset/d0af9ba0-08b3-4bca-8508-02cffeaae8fd/resource/1fcab772-0b3c-4938-8f72-e60db343cbe5/download/weaponswanted.json"
-    output_file_name = "weapons-wanted.json"
+    output_file_name = "assets/weapons-wanted.json"
     call(["curl", "--http1.1", file_url, 
         '-H', 'Connection: keep-alive', 
+        '-H','Keep-Alive: timeout=5',
         '-H', 'Cache-Control: max-age=0', 
         '-H', 'Upgrade-Insecure-Requests: 1', 
         '-H', 'User-Agent: Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/77.0.3865.90 Safari/537.36', 
