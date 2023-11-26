@@ -1,0 +1,38 @@
+name: "⚛️ 🛠 Streamlit app bug report"
+description: "Report a problem with ua-weapons streamlit application."
+title: "[Application Bug]: "
+labels: ["Component: Application", "Type: Bug", "Status: Unconfirmed"]
+body:
+- type: textarea
+  attributes:
+    label: Repro steps
+    description: |
+      What were you doing on the app when the bug happened?
+
+      Issues filed without repro steps will be closed.
+    placeholder: |
+      Example bug report:
+      1. Open streamlit web application
+      2. Zoom in barchart near the top of the page 
+      3. Double click
+  validations:
+    required: true
+- type: dropdown
+  attributes:
+    label: How often does this bug happen?
+    description: |
+      Following the repro steps above, how easily are you able to reproduce this bug?
+    options:
+      - Every time
+      - Often
+      - Sometimes
+      - Only once
+  validations:
+    required: true
+- type: input
+  id: error_message
+  attributes:
+    label: Error Message
+    description: |
+      Paste key error message contents here
+    render: text
