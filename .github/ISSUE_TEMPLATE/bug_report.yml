@@ -1,5 +1,4 @@
 name: "⚛️ 🛠 Streamlit app bug report"
-description: "Report a problem with "ua-weapons" streamlit application."
 body:
 - type: textarea
   attributes:
