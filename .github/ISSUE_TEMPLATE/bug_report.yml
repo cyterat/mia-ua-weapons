@@ -29,10 +29,10 @@ body:
       - Only once
   validations:
     required: true
-- type: input
+- type: textarea
   id: error_message
   attributes:
     label: Error Message
     description: |
       Paste key error message contents here
-  render: text
+    render: text
