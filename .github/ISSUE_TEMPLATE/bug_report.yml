@@ -1,4 +1,7 @@
 name: "⚛️ 🛠 Streamlit app bug report"
+description: "Report a problem with ua-weapons streamlit application."
+title: "Application Bug: "
+labels: ["Component: Application ", "Type: Bug"]
 body:
 - type: textarea
   attributes:
