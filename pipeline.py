@@ -7,7 +7,7 @@ def download_json():
 
     file_url = "https://data.gov.ua/dataset/d0af9ba0-08b3-4bca-8508-02cffeaae8fd/resource/1fcab772-0b3c-4938-8f72-e60db343cbe5/download/weaponswanted.json"
     output_file_name = "assets/weapons-wanted.json"
-    call(["curl", "--http1.1", file_url, 
+    return call(["curl", "--http1.1", file_url, 
         '-H', 'Connection: keep-alive', 
         '-H','Keep-Alive: timeout=300',
         '-H', 'User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/42.0.2311.135 Safari/537.36 Edge/12.246', 
@@ -16,8 +16,6 @@ def download_json():
         '-H', 'Cookie: v1%3A169789932031472105', 
         '-H', 'Sec-Fetch-Site: cross-site', 
         '--output', output_file_name])
-
-    print(f"☑️ File Downloaded: assets/weapons-wanted.json\n")
 
 
 def import_data():
@@ -417,6 +415,7 @@ def export_data(df):
 
 if __name__ == "__main__":
     download_json()
+    print(f"☑️ File Downloaded: assets/weapons-wanted.json\n")
     (
         import_data()
         .pipe(cast_dtypes)
