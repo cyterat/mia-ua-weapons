@@ -14,7 +14,8 @@ def download_json():
         '-H', 'Upgrade-Insecure-Requests: 1', 
         '-H', 'User-Agent: Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/77.0.3865.90 Safari/537.36', 
         '-H', 'Sec-Fetch-Mode: no-cors', 
-        '-H', 'Accept: text/html,application/html,application/json,text/json,', 
+        '-H', 'Accept: text/html,application/html,application/json,text/json,',
+        '-H', 'Cookie: v1%3A169789932031472105', 
         '-H', 'Sec-Fetch-Site: cross-site', 
         '--output', output_file_name])
 
