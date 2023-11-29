@@ -10,7 +10,7 @@ jobs:
     runs-on: ubuntu-latest
     defaults:
       run:
-        working-directory: ./assets
+        working-directory: assets
     steps:
       
       - name: download json file
@@ -28,7 +28,7 @@ jobs:
     runs-on: ubuntu-latest
     defaults:
       run:
-        working-directory: ./assets
+        working-directory: assets
     needs: download-json
     steps:
 
