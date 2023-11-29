@@ -8,6 +8,9 @@ on:
 jobs:
   download-json:
     runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ./assets
     steps:
       
       - name: download json file
@@ -19,9 +22,13 @@ jobs:
         with:
           name: weapons-json-artifact
           path: assets/weapons-wanted.json
+          if-no-files-found: error
 
   clean-data:
     runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ./assets
     needs: download-json
     steps:
 
