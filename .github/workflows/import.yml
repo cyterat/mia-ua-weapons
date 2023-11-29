@@ -14,11 +14,11 @@ jobs:
         run: |
           wget -c --retry-connrefused --waitretry=1 --read-timeout=20 --timeout=15 -t 0 --continue -O "assets/wanted-weapons.json" "https://data.gov.ua/dataset/d0af9ba0-08b3-4bca-8508-02cffeaae8fd/resource/1fcab772-0b3c-4938-8f72-e60db343cbe5/download/weaponswanted.json"
 
-        - name: archive json file
-          uses: actions/upload-artifact@v3
-          with:
-            name: weapons-json-artifact
-            path: assets/weapons-wanted.json
+      - name: archive json file
+        uses: actions/upload-artifact@v3
+        with:
+          name: weapons-json-artifact
+          path: assets/weapons-wanted.json
 
   clean-data:
     runs-on: ubuntu-latest
