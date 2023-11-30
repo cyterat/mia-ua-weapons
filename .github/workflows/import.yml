@@ -9,6 +9,8 @@ jobs:
   download-json:
     runs-on: ubuntu-latest
     steps:
+      - name: checkout repo content
+        uses: actions/checkout@v3
       
       - name: download json file
         run: |
@@ -26,6 +28,9 @@ jobs:
     needs: download-json
     steps:
 
+      - name: checkout repo content
+        uses: actions/checkout@v3
+
       - name: download json artifact
         uses: actions/download-artifact@v3
         with:
@@ -35,9 +40,6 @@ jobs:
       - name: display structure of downloaded file
         run: ls -R
 
-      - name: checkout repo content
-        uses: actions/checkout@v3
-
       - name: setup python
         uses: actions/setup-python@v4
         with:
@@ -45,7 +47,6 @@ jobs:
 
       - name: install python packages
         run: |
-          cd mia-ua-weapons
           python -m pip install --upgrade pip
           pip install -r requirements.txt
 
