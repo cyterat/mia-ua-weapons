@@ -1,14 +1,21 @@
 import pandas as pd
 import numpy as np
 import requests
+import os
 
 
 def import_data():
     print("\n1/7 Import data...")
 
-    file = "assets/weapons-wanted.json"
+    file = "./assets/weapons-wanted.json"
 
-    parsed = pd.read_json(file, orient="records")
+    print(os.path.isfile(file)) # True
+    print(os.path.isdir(file)) # False
+
+    if os.path.isfile(file):
+        parsed = pd.read_json(file, orient="records")
+    else:
+        print('The specified path is a folder')
 
     print("☑️ Data imported:")
     print(f"\nRows --> {parsed.shape[0]:,}")
