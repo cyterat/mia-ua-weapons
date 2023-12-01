@@ -7,15 +7,15 @@ import os
 def import_data():
     print("\n1/7 Import data...")
 
-    file = "./assets/weapons-wanted.json"
+    # Get the path to the JSON file
+    json_file_path = os.path.join('assets', 'weapons-wanted.json')
 
-    print(os.path.isfile(file)) # True
-    print(os.path.isdir(file)) # False
-
-    if os.path.isfile(file):
+    # Check if the file exists and whether it is a file or a folder
+    if os.path.exists(json_file_path) and os.path.isfile(json_file_path):
+        # Read the JSON file into a Pandas DataFrame
         parsed = pd.read_json(file, orient="records")
     else:
-        print('The specified path is a folder')
+        print("The file does not exist or is not a file.")
 
     print("☑️ Data imported:")
     print(f"\nRows --> {parsed.shape[0]:,}")
