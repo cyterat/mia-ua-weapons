@@ -13,7 +13,7 @@ def import_data():
     # Check if the file exists and whether it is a file or a folder
     if os.path.exists(json_file_path) and os.path.isfile(json_file_path):
         # Read the JSON file into a Pandas DataFrame
-        parsed = pd.read_json(file, orient="records")
+        parsed = pd.read_json(json_file_path, orient="records")
     else:
         print("The file does not exist or is not a file.")
 
