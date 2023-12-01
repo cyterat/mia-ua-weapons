@@ -1,21 +1,20 @@
 import pandas as pd
 import numpy as np
-import requests
-import os
+from pathlib import Path
 
 
 def import_data():
     print("\n1/7 Import data...")
 
     # Get the path to the JSON file
-    json_file_path = os.path.join('assets', 'weapons-wanted.json')
+    current_dir = Path(__file__).parent if "__file__" in locals() else Path.cwd()
+    json_file_path = current_dir / "weapons-wanted.json"
 
-    # Check if the file exists and whether it is a file or a folder
-    if os.path.exists(json_file_path) and os.path.isfile(json_file_path):
-        # Read the JSON file into a Pandas DataFrame
-        parsed = pd.read_json(json_file_path, orient="records")
-    else:
-        print("The file does not exist or is not a file.")
+    # Check if the file exists
+    assert os.path.exists(json_file_path), "The path should exist."
+    
+    # Read the JSON file into a Pandas DataFrame
+    parsed = pd.read_json(json_file_path, orient="records")
 
     print("☑️ Data imported:")
     print(f"\nRows --> {parsed.shape[0]:,}")
