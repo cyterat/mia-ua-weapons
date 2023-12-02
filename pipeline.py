@@ -7,13 +7,17 @@ import os
 
 def import_data():
     print("\n1/7 Import data...")
+    
+    #tmp
+    tmp = os.path.dirname(os.path.realpath(__file__))
+    print(tmp)
 
     # Get the path to the JSON file
     current_dir = Path(__file__).parent if "__file__" in locals() else Path.cwd()
     json_file_path = current_dir / "weapons-wanted.json"
 
     # Check if the file exists
-    assert os.path.exists(json_file_path), "The path should exist."
+    assert os.path.exists(json_file_path), f"The path should exist, but got {json_file_path}"
     
     # Read the JSON file into a Pandas DataFrame
     parsed = pd.read_json(json_file_path, orient="records")
