@@ -2,7 +2,6 @@ import pandas as pd
 import numpy as np
 
 from pathlib import Path
-import os
 
 
 def import_data():
@@ -10,10 +9,10 @@ def import_data():
 
     # Get the path to the JSON file
     current_dir = Path(__file__).parent if "__file__" in locals() else Path.cwd()
-    json_file_path = current_dir / "weapons-wanted.json"
+    json_file_path = current_dir / "assets" / "weapons-wanted.json"
 
     # Check if the file exists
-    assert os.path.exists(json_file_path), "The path should exist."
+    assert Path.is_file(json_file_path), f"File should exist. Got: '{json_file_path}"
     
     # Read the JSON file into a Pandas DataFrame
     parsed = pd.read_json(json_file_path, orient="records")
