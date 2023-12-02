@@ -9,7 +9,7 @@ def import_data():
 
     # Get the path to the JSON file
     repository_dir = os.path.dirname(os.path.realpath(__file__))
-    json_file_path = repository_dir / "assets/weapons-wanted.json"
+    json_file_path = repository_dir + "/assets/weapons-wanted.json"
 
     # Check if the file exists
     assert os.path.exists(json_file_path), f"The path should exist, but got {json_file_path}"
