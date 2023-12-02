@@ -1,20 +1,15 @@
 import pandas as pd
 import numpy as np
 
-from pathlib import Path
 import os
 
 
 def import_data():
     print("\n1/7 Import data...")
-    
-    #tmp
-    tmp = os.path.dirname(os.path.realpath(__file__))
-    print(tmp)
 
     # Get the path to the JSON file
-    current_dir = Path(__file__).parent if "__file__" in locals() else Path.cwd()
-    json_file_path = current_dir / "weapons-wanted.json"
+    repository_dir = os.path.dirname(os.path.realpath(__file__))
+    json_file_path = repository_dir / "assets/weapons-wanted.json"
 
     # Check if the file exists
     assert os.path.exists(json_file_path), f"The path should exist, but got {json_file_path}"
