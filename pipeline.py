@@ -6,13 +6,29 @@ from pathlib import Path
 
 def import_data():
     print("\n1/7 Import data...")
-
-    # Get the path to the JSON file
+    # Current working directory (repository) path
     current_dir = Path(__file__).parent if "__file__" in locals() else Path.cwd()
+    # Check whether JSON file exists anywhere within the repository
+    def check_json_existance():
+        # Store all files with .json extension in a list
+        files = sorted(Path(json_file_path).glob('**/*.json'))
+        json_existance = None
+        # If list contains any paths to JSON file print them out and set json_existence to True
+        if len(files) > 0:
+            json_existance = True
+            print("JSON file exists here:")
+            # Prints all directories containing JSON file
+            for f in files:
+                print(f)
+        else:
+            json_existance = False
+            print("JSON file doesn't exist")
+        # True if JSON exists
+        return json_existance
+        
+    assert check_json_existance(), "JSON file doesn't exist in the repository."
+    
     json_file_path = current_dir / "assets" / "weapons-wanted.json"
-
-    # Check if the file exists
-    assert Path.is_file(json_file_path), f"File should exist. Got: '{json_file_path}"
     
     # Read the JSON file into a Pandas DataFrame
     parsed = pd.read_json(json_file_path, orient="records")
