@@ -11,7 +11,7 @@ def import_data():
     # Check whether JSON file exists anywhere within the repository
     def check_json_existance():
         # Store all files with .json extension in a list
-        files = sorted(Path(json_file_path).glob('**/*.json'))
+        files = sorted(Path(current_dir).glob('**/*.json'))
         json_existance = None
         # If list contains any paths to JSON file print them out and set json_existence to True
         if len(files) > 0:
