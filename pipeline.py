@@ -8,38 +8,33 @@ import os
 def import_data():
     print("\n1/7 Import data...")
     # Current working directory (repository) path
-    current_dir = Path(__file__).parent if "__file__" in locals() else Path.cwd()
-    # Check whether JSON file exists anywhere within the repository
-    def check_json_existance():
-        # Store all files with .json extension in a list
-        files = sorted(Path(current_dir).glob('**/*.json'))
-        json_existance = None
-        # If list contains any paths to JSON file print them out and set json_existence to True
-        if len(files) > 0:
-            json_existance = True
-            print("JSON file exists here:")
-            # Prints all directories containing JSON file
-            for f in files:
-                print(f)
-        else:
-            json_existance = False
-            print("JSON file doesn't exist")
-        # True if JSON exists
-        return json_existance
-        
-    assert check_json_existance(), "JSON file doesn't exist in the repository."
+    repository_dir = Path(__file__).parent if "__file__" in locals() else Path.cwd()
 
-    # TEST
-    artifact_path = os.environ.get('ARTIFACT_PATH')
+    
+    def check_json_existance():
+        """
+        Checks whether JSON file exists in the repository and returns path.
+        Returns 'None' if JSON not found.
+        """
+        # Store all files with .json extension in a list
+        files = sorted(Path(repository_dir).glob('**/*.json'))
+        
+        # Will remain "None" if JSON is not found
+        json_file_path = None
+
+        # Search through the directory for JSON files (should be only one in theory)
+        print("JSON file exists here:")
+        for f in files:
+            if os.path.isfile(f):
+                json_file_path = f
+                print(f)    
+
+        return json_file_path
+
+    assert  check_json_existance() != None, "JSON file doesn't exist in the repository"
 
     # Read the JSON artifact into a Pandas DataFrame
-    parsed = pd.read_json(artifact_path, orient="records")
-
-    # UNCOMMENT IF TEST FAILS
-    # json_file_path = current_dir / "assets" / "weapons-wanted.json"
-    
-    # # Read the JSON file into a Pandas DataFrame
-    # parsed = pd.read_json(json_file_path, orient="records")
+    parsed = pd.read_json(check_json_existance(), orient="records")
 
     print("☑️ Data imported:")
     print(f"\nRows --> {parsed.shape[0]:,}")
