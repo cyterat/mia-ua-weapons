@@ -2,6 +2,7 @@ import pandas as pd
 import numpy as np
 
 from pathlib import Path
+import os
 
 
 def import_data():
@@ -27,11 +28,18 @@ def import_data():
         return json_existance
         
     assert check_json_existance(), "JSON file doesn't exist in the repository."
+
+    # TEST
+    artifact_path = os.environ.get('ARTIFACT_PATH')
+
+    # Read the JSON artifact into a Pandas DataFrame
+    parsed = pd.read_json(artifact_path, orient="records")
+
+    # UNCOMMENT IF TEST FAILS
+    # json_file_path = current_dir / "assets" / "weapons-wanted.json"
     
-    json_file_path = current_dir / "assets" / "weapons-wanted.json"
-    
-    # Read the JSON file into a Pandas DataFrame
-    parsed = pd.read_json(json_file_path, orient="records")
+    # # Read the JSON file into a Pandas DataFrame
+    # parsed = pd.read_json(json_file_path, orient="records")
 
     print("☑️ Data imported:")
     print(f"\nRows --> {parsed.shape[0]:,}")
