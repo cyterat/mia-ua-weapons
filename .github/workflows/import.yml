@@ -52,7 +52,9 @@ jobs:
 
       - name: execute py script
         run: python pipeline.py
-
+        env: 
+          ARTIFACT_PATH: assets/weapons-wanted.json
+        
       - name: commit files
         run: |
           git config --local user.email "action@github.com"
