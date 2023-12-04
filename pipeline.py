@@ -34,7 +34,7 @@ def import_data():
     assert  check_json_existance() != None, "JSON file doesn't exist in the repository"
 
     # Read the JSON artifact into a Pandas DataFrame
-    parsed = pd.read_json(check_json_existance(), orient="records")
+    parsed = pd.read_json("/home/runner/work/mia-ua-weapons/mia-ua-weapons/assets/weapons-wanted.json", orient="records")
 
     print("☑️ Data imported:")
     print(f"\nRows --> {parsed.shape[0]:,}")
