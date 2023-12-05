@@ -2,39 +2,31 @@ import pandas as pd
 import numpy as np
 
 from pathlib import Path
-import os
 
 
 def import_data():
     print("\n1/7 Import data...")
     # Current working directory (repository) path
     repository_dir = Path(__file__).parent if "__file__" in locals() else Path.cwd()
-
     
-    def check_json_existance():
+    def get_lfs_json_path():
         """
-        Checks whether JSON file exists in the repository and returns path.
-        Returns 'None' if JSON not found.
+        Returns JSON data file path using LFS OID.
+        Throws an AssertionError if file is not found.
         """
-        # Store all files with .json extension in a list
-        files = sorted(Path(repository_dir).glob('**/*.json'))
+        # The unique identifier of the file 
+        oid = '6a64a05184be964951ed8f156c618f0b2688ae64cbdbe9102aff0b4358f6c4eb'
         
-        # Will remain "None" if JSON is not found
-        json_file_path = None
+        # The path to JSON file
+        lfs_json_dir = f"{repository_dir}/.git/lfs/objects/{oid[0:2]}/{oid[2:4]}/{oid}"
 
-        # Search through the directory for JSON files (should be only one in theory)
-        print("JSON file exists here:")
-        for f in files:
-            if os.path.isfile(f):
-                json_file_path = f
-                print(f)    
+        # Check if path exists and is a file
+        assert Path(lfs_json_dir).exists(), f"\nJSON pointer file must exist, but the directory is empty.\nDirectory: {lfs_json_dir}"
 
-        return json_file_path
+        return lfs_json_dir
 
-    assert  check_json_existance() != None, "JSON file doesn't exist in the repository"
-
-    # Read the JSON artifact into a Pandas DataFrame
-    parsed = pd.read_json("assets/weapons-wanted.json", orient="records")
+    # Read the JSON data file into a Pandas DataFrame
+    parsed = pd.read_json(get_lfs_json_path(), orient="records")
 
     print("☑️ Data imported:")
     print(f"\nRows --> {parsed.shape[0]:,}")
