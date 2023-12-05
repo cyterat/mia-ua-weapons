@@ -29,17 +29,35 @@ jobs:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           branch: master
 
+  extract-lfs-file-oid:
+    runs-on: ubuntu-latest
+    needs: download-json    
+    steps:
+      - name: checkout code
+        uses: actions/checkout@v3
+        
+      - name: extract OID
+        id: extract-oid
+        run: |
+          oid=$(git lfs ls-files path/to/pointer/file | awk '/OID:/ { print $2 }')
+          echo "::set-output name=oid::$oid"
+              
+      - name: publish OID artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: oid-artifact
+          path: oid.txt
+
   clean-data:
     runs-on: ubuntu-latest
-    needs: download-json
+    needs: extract-lfs-file-oid
     steps:
-
       - name: checkout repo content
         uses: actions/checkout@v3
 
-      - name: display structure of downloaded file
+      - name: display structure of the repository
         run: ls -R
-
+      
       - name: setup python
         uses: actions/setup-python@v4
         with:
@@ -50,8 +68,16 @@ jobs:
           python -m pip install --upgrade pip
           pip install -r requirements.txt
 
+      - name: Download OID artifact
+        uses: actions/download-artifact@v3
+        with:
+          name: oid-artifact
+          path: oid.txt
+
       - name: execute py script
-        run: python pipeline.py
+        env:
+          OID: ${{ needs.extract-lfs-file-oid.outputs.oid }}
+        run: python pipeline.py --oid $OID
         
       - name: commit files
         run: |

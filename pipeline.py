@@ -2,12 +2,11 @@ import pandas as pd
 import numpy as np
 
 from pathlib import Path
+import os
 
 
 def import_data():
     print("\n1/7 Import data...")
-    # Current working directory (repository) path
-    repository_dir = Path(__file__).parent if "__file__" in locals() else Path.cwd()
     
     def get_lfs_json_path():
         """
@@ -15,14 +14,15 @@ def import_data():
         Throws an AssertionError if file is not found.
         """
         # The unique identifier of the file 
-        oid = '6a64a05184be964951ed8f156c618f0b2688ae64cbdbe9102aff0b4358f6c4eb'
+        oid = os.environ.get('OID')
+        
+        # Check if OID environment variable exists.
+        assert oid, "OID environment variable not set."
         
         # The path to JSON file
-        lfs_json_dir = f"{repository_dir}/.git/lfs/objects/{oid[0:2]}/{oid[2:4]}/{oid}"
+        lfs_json_dir = f".git/lfs/objects/{oid[0:2]}/{oid[2:4]}/{oid}"
 
-        # Check if path exists and is a file
-        assert Path(lfs_json_dir).exists(), f"\nJSON pointer file must exist, but the directory is empty.\nDirectory: {lfs_json_dir}"
-
+        print("OID:", oid)
         return lfs_json_dir
 
     # Read the JSON data file into a Pandas DataFrame
