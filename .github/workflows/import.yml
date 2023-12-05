@@ -39,14 +39,14 @@ jobs:
       - name: extract OID
         id: extract-oid
         run: |
-          oid=$(git lfs ls-files assets/weapons-wanted.json | awk '/OID:/ { print $2 }')
+          oid=$(grep -oP "oid sha256:\K\S+" assets/weapons-wanted.json)
           echo "::set-output name=oid::$oid"
               
       - name: publish OID artifact
         uses: actions/upload-artifact@v3
         with:
           name: oid-artifact
-          path: oid.txt
+          path: assets/oid.txt
 
   clean-data:
     runs-on: ubuntu-latest
@@ -72,7 +72,7 @@ jobs:
         uses: actions/download-artifact@v3
         with:
           name: oid-artifact
-          path: oid.txt
+          path: assets/oid.txt
 
       - name: execute py script
         env:
