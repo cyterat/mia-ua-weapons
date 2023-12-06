@@ -13,8 +13,8 @@ def import_data():
         Returns JSON data file path using LFS OID.
         Throws an AssertionError if file is not found.
         """
-        # The unique identifier of the file 
-        oid = os.environ.get('OID')
+        # Import the environment variable 
+        oid = os.environ.get('OID_ARTIFACT')
         
         # Check if OID environment variable exists.
         assert oid, "OID environment variable not set."
