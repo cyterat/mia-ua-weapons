@@ -38,7 +38,7 @@ jobs:
         
       - name: extract OID
         id: extract-oid
-        run: grep -oP 'oid sha256:\K\S+' assets/weapons-wanted.json) | tee assets/oid.txt
+        run: grep -oP 'oid sha256:\K\S+' assets/weapons-wanted.json | tee assets/oid.txt
 
       - name: commit files
         run: |
