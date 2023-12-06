@@ -40,7 +40,7 @@ jobs:
         id: extract-oid
         run: |
           oid=$(grep -oP "oid sha256:\K\S+" assets/weapons-wanted.json)
-          echo "::set-output name=oid::$oid"
+          echo "$oid" > assets/oid.txt
               
       - name: publish OID artifact
         uses: actions/upload-artifact@v3
