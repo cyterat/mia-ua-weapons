@@ -12,8 +12,8 @@ jobs:
       - name: checkout repo content
         uses: actions/checkout@v3
 
-      - name: fetch changes from remote
-        run: git fetch origin
+      - name: pull changes from remote
+        run: git pull origin
       
       - name: download json file
         run: |
@@ -39,8 +39,8 @@ jobs:
       - name: checkout code
         uses: actions/checkout@v3
 
-      - name: fetch changes from remote
-        run: git fetch origin
+      - name: pull changes from remote
+        run: git pull origin
         
       - name: extract OID
         id: extract-oid
@@ -66,8 +66,8 @@ jobs:
       - name: checkout repo content
         uses: actions/checkout@v3
 
-      - name: fetch changes from remote
-        run: git fetch origin
+      - name: pull changes from remote
+        run: git pull origin
 
       - name: display structure of the repository
         run: ls -R
