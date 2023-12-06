@@ -14,7 +14,7 @@ def import_data():
         Throws an AssertionError if file is not found.
         """
         # Path to the oid.txt artifact 
-        oid_file_path = "downloaded_assets/assets/oid.txt"
+        oid_file_path = "assets/oid.txt"
         
         # Check if OID artifact path exists.
         assert os.path.exists(oid_file_path), "oid.txt artifact path does not exist."
