@@ -44,7 +44,7 @@ jobs:
         uses: actions/upload-artifact@v3
         with:
           name: oid-artifact
-          path: assets/oid.txt
+          path: assets
 
   clean-data:
     runs-on: ubuntu-latest
@@ -70,12 +70,10 @@ jobs:
         uses: actions/download-artifact@v3
         with:
           name: oid-artifact
-          path: assets/oid.txt
+          path: downloaded_assets
 
       - name: execute py script
-        env:
-          OID: ${{ needs.extract-lfs-file-oid.outputs.oid }}
-        run: python pipeline.py --oid $OID
+        run: python pipeline.py
         
       - name: commit files
         run: |

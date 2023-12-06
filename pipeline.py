@@ -13,13 +13,17 @@ def import_data():
         Returns JSON data file path using LFS OID.
         Throws an AssertionError if file is not found.
         """
-        # Import the environment variable 
-        oid = os.environ.get('OID_ARTIFACT')
+        # Path to the oid.txt artifact 
+        oid_file_path = "downloaded_assets/assets/oid.txt"
         
-        # Check if OID environment variable exists.
-        assert oid, "OID environment variable not set."
+        # Check if OID artifact path exists.
+        assert os.path.exists(oid_file_path), "oid.txt artifact path does not exist."
         
-        # The path to JSON file
+        # Read oid.txt contents into file
+        with open(oid_file_path, "r") as file:
+            oid = file.read() 
+        
+        # The path to JSON file given OID
         lfs_json_dir = f".git/lfs/objects/{oid[0:2]}/{oid[2:4]}/{oid}"
 
         print("OID:", oid)
