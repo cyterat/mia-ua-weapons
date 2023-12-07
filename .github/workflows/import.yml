@@ -72,6 +72,9 @@ jobs:
       - name: pull changes from remote
         run: git pull origin
 
+      - name: pull lfs file
+        run: git lfs pull
+        
       - name: display structure of the repository
         run: ls -R
       

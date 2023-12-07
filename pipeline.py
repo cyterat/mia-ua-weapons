@@ -7,29 +7,14 @@ import os
 def import_data():
     print("\n1/7 Import data...")
     
-    def get_lfs_json_path():
-        """
-        Returns JSON data file path using LFS OID.
-        Throws an AssertionError if file is not found.
-        """
-        # Path to the oid.txt artifact 
-        oid_file_path = "assets/oid.txt"
+    # Path to the JSON file 
+    json_file_path = "assets/weapons-wanted.json"
         
-        # Check if OID artifact path exists.
-        assert os.path.exists(oid_file_path), "oid.txt artifact path does not exist."
-        
-        # Read oid.txt contents into file
-        with open(oid_file_path, "r") as file:
-            oid = file.read() 
-        
-        # The path to JSON file given OID
-        lfs_json_dir = f".git/lfs/objects/{oid[0:2]}/{oid[2:4]}/{oid}"
-
-        print("OID:", oid)
-        return lfs_json_dir
+    # Check if JSON file path exists
+    assert os.path.exists(json_file_path), "JSON file should exist in the provided path."
 
     # Read the JSON data file into a Pandas DataFrame
-    parsed = pd.read_json(get_lfs_json_path(), orient="records")
+    parsed = pd.read_json(json_file_path, orient="records")
 
     print("☑️ Data imported:")
     print(f"\nRows --> {parsed.shape[0]:,}")
