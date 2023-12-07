@@ -14,6 +14,9 @@ jobs:
 
       - name: pull changes from remote
         run: git pull origin
+
+      - name: remove redundant lfs objects from previous runs
+        run: rm -rf ".git/lfs/objects"/*
       
       - name: download json file
         run: |
