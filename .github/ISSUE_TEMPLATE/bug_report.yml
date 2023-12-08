@@ -11,10 +11,11 @@ body:
 
       Issues filed without repro steps will be closed.
     placeholder: |
+
       Example bug report:
       1. Open streamlit web application
       2. Zoom in barchart near the top of the page 
-      3. Double click
+      3. Double click anywhere on the barchart
   validations:
     required: true
 - type: dropdown
