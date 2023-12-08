@@ -15,6 +15,9 @@ jobs:
       - name: pull changes from remote
         run: git pull origin
 
+      - name: install git lfs
+        run: git lfs install
+
       - name: check directory size before prune
         run: du -h -d 0
 
