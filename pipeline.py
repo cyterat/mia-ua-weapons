@@ -8,7 +8,7 @@ def import_data():
     print("\n1/7 Import data...")
     
     # Path to the JSON file 
-    json_file_path = "assets/weapons-wanted"
+    json_file_path = "assets/weapons-wanted.json"
         
     # Check if JSON file path exists
     assert os.path.exists(json_file_path), "JSON file should exist in the provided path."
