@@ -2,12 +2,15 @@ name: Model Data
 
 on: 
   workflow_dispatch:
-  schedule:
-    - cron: '0 7 1 */1 *'
+  workflow_run:
+    workflows: ["Import Data"]
+    types: 
+      - completed
 
 jobs:  
   modeling:
     runs-on: ubuntu-latest
+    if: ${{ github.event.workflow_run.conclusion == 'success' }}
     steps:
 
       - name: checkout repo content
