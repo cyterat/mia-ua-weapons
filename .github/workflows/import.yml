@@ -20,20 +20,14 @@ jobs:
       
       - name: download json file
         run: |
-          wget --secure-protocol=TLSv1_2 -c --retry-connrefused --waitretry=1 --read-timeout=20 --timeout=15 -t 0 --continue -O "assets/weapons-wanted.json" "https://data.gov.ua/dataset/d0af9ba0-08b3-4bca-8508-02cffeaae8fd/resource/1fcab772-0b3c-4938-8f72-e60db343cbe5/download/weaponswanted.json"
+          wget --secure-protocol=TLSv1_2 -c --retry-connrefused --waitretry=1 --read-timeout=20 --timeout=15 -t 0 --continue -O "weapons-wanted.json" "https://data.gov.ua/dataset/d0af9ba0-08b3-4bca-8508-02cffeaae8fd/resource/1fcab772-0b3c-4938-8f72-e60db343cbe5/download/weaponswanted.json"
 
-      - name: commit files
-        run: |
-          git config --local user.email "action@github.com"
-          git config --local user.name "GitHub Action"
-          git add -A
-          git diff-index --quiet HEAD || (git commit -a -m "Download JSON file" --allow-empty)
-
-      - name: push changes
-        uses: ad-m/github-push-action@v0.6.0
+      - name: upload json for pipeline job
+        uses: actions/upload-artifact@v3
         with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          branch: master
+          name: json
+          path: weapons-wanted.json
+      
 
   run-pipeline:
     runs-on: ubuntu-latest
@@ -57,6 +51,12 @@ jobs:
         run: |
           python -m pip install --upgrade pip
           pip install -r requirements.txt
+
+      - name: download json for pipeline job
+        uses: actions/download-artifact@v3
+        with:
+          name: json
+          path: weapons-wanted.json
 
       - name: execute py script
         run: python pipeline.py
