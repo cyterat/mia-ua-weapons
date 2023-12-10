@@ -23,7 +23,7 @@ The majority of changes were made to the data **import** and **modeling** workfl
 - **wget** has been added which enables to download the JSON file via HTTPS using custom headers;
 -  JSON file is now stored as an artifact and used only within a workflow;
 - **Model Data** workflow will now run only when the **Import Data** finishes, or when triggered manually; 
--  Data Flow/Models Relationship [diagram](https://github.com/cyterat/mia-ua-weapons/blob/0e657d3160497e17bba80c65cc9f691c1073aea0/assets/ua-mia-weapons-relationships.png) have been updated.
+-  Data Flow/Models Relationship [diagram](https://github.com/cyterat/mia-ua-weapons/blob/0e657d3160497e17bba80c65cc9f691c1073aea0/assets/ua-mia-weapons-relationships.png) has been updated.
   
 ## 🛠 Libraries
 
