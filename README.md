@@ -16,13 +16,14 @@
 
 * The **original dataset** can be accessed at [data.gov.ua](https://data.gov.ua/en/dataset/5e7a9e93-e4ae-408a-8b99-6a21bfa9c12a/resource/1fcab772-0b3c-4938-8f72-e60db343cbe5)
 
-## 🚧 Version 1.0.0 (Latest)
+## 🚧 Version 1.1.0 (Latest)
 
-* The processes of cleaning and modeling data have been automated using GitHub Actions.
-* Layout and style of separate elements have been improved and are now stored in a separate css file.
-* Data models and elements [relationship graph](https://github.com/cyterat/mia-ua-weapons/blob/master/assets/ua-mia-weapons-relationships.png) has been added.
-* Visual elements have been reorganized into separate files representing their type.
-* Minor code refactoring and readability improvements were made.
+The majority of changes were made to the data **import** and **modeling** workflows in the GitHub Actions.
+
+- **wget** has been added which enables to download the JSON file via HTTPS using custom headers;
+-  JSON file is now stored as an artifact and used only within a workflow;
+- **Model Data** workflow will now run only when the **Import Data** finishes, or when triggered manually; 
+-  Data Flow/Models Relationship [diagram](https://github.com/cyterat/mia-ua-weapons/blob/0e657d3160497e17bba80c65cc9f691c1073aea0/assets/ua-mia-weapons-relationships.png) have been updated.
   
 ## 🛠 Libraries
 
