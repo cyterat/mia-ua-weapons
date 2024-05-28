@@ -77,11 +77,13 @@ with st.spinner("Please wait a few seconds while I prepare everything...🔥"):
         f"""
         <div class="page-header">
             <div class="main-title">
-                LOST AND STOLEN WEAPONS IN UKRAINE
+                LOST AND STOLEN WEAPONS IN UKRAINE 
+                <sub style='color: #838383;'>
+                Made by cyterat <a style=text-align: center; href="https://github.com/cyterat"><img src="https://images2.imgbox.com/3f/e6/RqycpnL4_o.png" alt="cyterat" width="20" height="25"></a>
+                </sub>
             </div>
             <div class="main-subtitle">
-                This webpage is a visual representation of the dataset provided by MIA of Ukraine to the open data portal under the Creative Commons Attribution license.<br> 
-                <a style=text-align: center; href="https://github.com/cyterat"><img src="https://images2.imgbox.com/3f/e6/RqycpnL4_o.png" alt="cyterat" width="25" height="30"></a>
+                This webpage is a visual representation of the dataset provided by MIA of Ukraine to the open data portal under the Creative Commons Attribution license.<br>
                 <span style='color: #838383; font-size: 15px'>Last update: {current_date}</span>
             </div>
         </div>
@@ -106,8 +108,8 @@ with st.spinner("Please wait a few seconds while I prepare everything...🔥"):
     overall_total_t = date_report_total[date_report_total["report"] == "Theft"]['total'].sum()
     
     # tmp (~population according to the IDSS of Ukraine)
-    current_population =  34000000
-    delta_population = 8000000
+    current_population =  38000000
+    delta_population = 4000000
 
     current_date, current_total, new_records, delta_color, sign = current_total_records(info="total")
     current_date, current_total_l, new_records_l, delta_color_l, sign_l = current_total_records(info="loss")
@@ -117,7 +119,7 @@ with st.spinner("Please wait a few seconds while I prepare everything...🔥"):
         f"""
         <div class=total-metric>
             <button disabled class='total-metric-item'>
-                <span title='According to IDSS, the population of Ukraine was between 28 and 34 million as of January 1, 2023.'>
+                <span title='According to estimates from the United Nations, the population of Ukraine as of 2024 is approx. 38 million'>
                     <span style='font-size: 15px'>~ Population (2023) <sup>?</sup></span><br>
                     <span style='font-size: 36px'>{current_population:,}</span><br>
                     <span style='color: {delta_color}; font-size: 15px'>-{delta_population:,}</span>
@@ -200,6 +202,8 @@ with st.spinner("Please wait a few seconds while I prepare everything...🔥"):
         pct_diff_2014 = int(total_2014 / total_prev * 100)
         diff_2014 = (total_2014 - total_prev)
         
+        diff_2021_22 = model_region_year_total[model_region_year_total["date"].dt.year == 2021]["total"].sum() - model_region_year_total[model_region_year_total["date"].dt.year == 2022]["total"].sum()
+
         st.markdown(
             # <div class='total-metric-item' style='font-family:{font_family}'>
             f"""
@@ -216,6 +220,10 @@ with st.spinner("Please wait a few seconds while I prepare everything...🔥"):
                     The main contributor to this high percentage was the <span style='color: {clr_main}'>2014</span> annexation, meaning that all 
                     <span style='color: {clr_main}'>weapons registered</span> there were likely <span style='color: {clr_main}'>labeled as lost or stolen</span>.
                     The same applies to the <span style='color: {clr_main}'>Donetsk</span> region, which makes up approximately <span title="{int(top[top['region']=='Donetsk']['total']):,} records" style='color: {clr_main}'>{int(round(top[top['region']=='Donetsk']['total_pct'], 2)*100)}%</span> of all records. 
+                </ul>
+                <ul>
+                    Russian <span style='color: {clr_main}'>full-scale invasion</span> of Ukraine in February 2022 contributed to yet <span style='color: {clr_main}'>another surge</span> in the number of lost and stolen weapons, 
+                    with nearly <span title='{abs(diff_2021_22):,} records' style='color: {clr_main}'>{abs(diff_2021_22 / model_region_year_total[model_region_year_total["date"].dt.year == 2021]["total"].sum() * 100):.0f}% more records</span> than in 2021. The similar tendency extended into 2023, although with a clear <span style='color: {clr_main}'>downward trend</span>.  
                 </ul>
                 <ul>
                     The <span style='color: {clr_main}'>tiniest</span> share of the country records has the <span style='color: {clr_main}'>{bot.iloc[0,0]}</span> region, 

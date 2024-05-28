@@ -395,17 +395,14 @@ def generate_events_barchart():
         xref='paper',
         yref='paper',
         x=-0.025,
-        y=-0.0575,
+        y=-0.07,
         yanchor='top',
         showarrow=False,
         align='left',
         text=f"""
         <span style='color: {clr_secondary_font}; font-size:12px'>
-        Data Source: MIA of Ukraine ⋅ Visualization by: cyterat ⋅ Available at: https://ua-weapons.streamlit.app ⋅ Year: {df['date'].dt.year.max()}
-        </span><br>
-        <a style='color:{clr_secondary_font}; font-size:12px' href='https://raw.githubusercontent.com/cyterat/mia-ua-weapons-v2/main/assets/ua-weapons-history.png'>
-        Click <b>here</b> to open png format of this visualization
-        </span></a>
+        Data Source: MIA of Ukraine ⋅ Visualization by: <a style='color:{clr_secondary_font};' href='https://github.com/cyterat'><b>cyterat</b></a> ⋅ Available at: https://ua-weapons.streamlit.app ⋅ Year: {df['date'].dt.year.max()}
+        </span>
         """,
     )
 
@@ -418,7 +415,7 @@ def generate_events_barchart():
             'l':20, 
             'r':0,
             't':20, 
-            'b':80
+            'b':70
             },
         font_color=clr_font,
         font_size=14,
@@ -485,9 +482,6 @@ def generate_events_barchart():
     # Disable chart "zoom in" and "zoom out"
     fig.layout.xaxis.fixedrange = False
     fig.layout.yaxis.fixedrange = True
-
-    # Hide options bar above the chart
-    # config = {'displayModeBar': False}
     
     config = {
         'displaylogo': False,
@@ -500,16 +494,7 @@ def generate_events_barchart():
             'toImage',
             ]
         }
-    
-    # Export the figure to a PNG file with the specified background color
-    fig.update_layout(
-        plot_bgcolor=clr_tile_background,
-        paper_bgcolor=clr_tile_background
-    )
 
-    pio.write_image(fig, f'assets/ua-weapons-history.png', format='png', width=1900, height=680)
-
-    # Reset the background color to transparent for display
     fig.update_layout(
         plot_bgcolor=clr_tile_background,  
         paper_bgcolor=clr_transparent

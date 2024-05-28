@@ -143,7 +143,7 @@ div[data-testid="stVerticalBlock"]>div>div[data-testid="stVerticalBlock"]>div[da
 
 /* Page padding */
 .appview-container .main .block-container {
-    padding-top: 2rem;
+    padding-top: 1rem;
     padding-bottom: 0rem;
     padding-left: 3rem;
     padding-right: 3rem;
