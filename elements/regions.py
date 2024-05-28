@@ -54,7 +54,7 @@ def generate_rank_region_population(region):
         f"""
         <span style='font-size:30px; font-family:{font_main}; font-weight:700; line-height: 2rem;'>
             <span style='color:{clr_secondary_font}'>#{rank}</span> 
-            <span style='color:{clr_font}'>{region.capitalize()}</b></span><br>
+            <span style='color:{clr_font}'>{region.title()}</b></span><br>
             <span title='Population in {2021}' style='font-size:16px; color:{clr_secondary_font}; margin-bottom: 1rem;'>&#128578 {int(pop):,} <sup>?</sup></span>
         </span>""",
         unsafe_allow_html=True,
