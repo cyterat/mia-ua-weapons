@@ -97,4 +97,4 @@ jobs:
       Optional: Clean up temporary branch after merge
       - name: Delete Temporary Branch
         run: git push origin --delete update-branch
-        if: success()  # Only delete if the previous step (merge) was successful
+        if: success()
