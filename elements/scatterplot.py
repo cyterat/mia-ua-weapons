@@ -576,11 +576,28 @@ def generate_weapons_scatterplot():
     
     # Data
     model_region_weaponcategory_total = pd.read_parquet("assets/models/region-weaponcategory-total.parquet.gzip")
+
+    # Function to insert line breaks
+    def insert_line_breaks(weaponcategory_name):
+
+        if ' ' in weaponcategory_name:
+            return weaponcategory_name.replace(' ', '<br>')
+
+        elif '&' in weaponcategory_name:
+            return weaponcategory_name.replace('&', '<br>and<br>')
+
+        else:
+            return weaponcategory_name
+
+    # Apply the function to the 'weaponcategory' column
+    model_region_weaponcategory_total['weaponcategory'] = model_region_weaponcategory_total['weaponcategory'].apply(insert_line_breaks)
     
+    # Scale up values for better markers diplay
+    model_region_weaponcategory_total['total_log100'] = (model_region_weaponcategory_total['total_log100'] + 0.1) 
+
     # Colors
-    # favcol = ["#00383b", "#006268", "#009ba1", "#21f8ff", "#faffff"]
-    favcol = ["#8D9294", "#A38081", "#B96D6E", "#CF5B5B", "#E54848"]
-    # favcol = ["#DEDEDE", "#E0B9B9", "#E29393", "#E36E6E", "#E54848"]
+    favcol = ["#00383b","#0B787C","#16B8BE","#21f8ff","#faffff"]
+
 
     fig = px.scatter(
         model_region_weaponcategory_total,
@@ -646,7 +663,7 @@ def generate_weapons_scatterplot():
             'side':'top',
             'ticks':'outside',
             'anchor':'free', 
-            'position':0.98
+            'position':0.96
             },
         yaxis={
             'title':None,
