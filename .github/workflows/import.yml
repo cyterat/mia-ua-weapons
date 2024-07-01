@@ -72,29 +72,8 @@ jobs:
           git add -A
           git diff-index --quiet HEAD || (git commit -a -m "Update main dataset" --allow-empty)
 
-      - name: push changes to temporary branch
+      - name: push changes
         uses: ad-m/github-push-action@v0.6.0
         with:
           github_token: ${{ secrets.GH_PAT }}
-          branch: update-branch
-
-      - name: Create Pull Request
-        uses: peter-evans/create-pull-request@v3
-        with:
-          token: ${{ secrets.GH_PAT }}
-          branch: update-branch
-          base: master
-          title: "Automated update"
-          body: "This is an automated update from the data import workflow."
-
-      Optional: Automate merge of the pull request
-      - name: Merge Pull Request
-        uses: pullreminders/merge-me-action@v0.5.0
-        with:
-          github_token: ${{ secrets.GH_PAT }}
-          pull_request_number: ${{ steps.create_pull_request.outputs.pull_request_number }}
-
-      Optional: Clean up temporary branch after merge
-      - name: Delete Temporary Branch
-        run: git push origin --delete update-branch
-        if: success()
+          branch: master
