@@ -224,7 +224,7 @@ with st.spinner("Please wait a few seconds while I prepare everything...🔥"):
                 <ul>
                     Russian <span style='color: {clr_main}'>full-scale invasion</span> of Ukraine in February 2022 contributed to yet <span style='color: {clr_main}'>another surge</span> in the number of lost and stolen weapons, 
                     with nearly <span title='{abs(diff_2021_22):,} records' style='color: {clr_main}'>{abs(diff_2021_22 / model_region_year_total[model_region_year_total["date"].dt.year == 2021]["total"].sum() * 100):.0f}% more records</span> than in 2021. Several peaks can be observed during that year, 
-                    representing a rapidly changing combat environment, as Ukraine regains control over large portions of its the territory. These peaks are swiftly followed by a significant decline, suggesting a normalization in the number of reported incidents, returning to prior levels. However, 
+                    representing a rapidly changing combat environment, as Ukraine regains control over the large portions of its territory. These peaks are swiftly followed by a significant decline, suggesting a normalization in the number of reported incidents, returning to prior levels. However, 
                     the graph then reveals a steady and continuous rise in the following months, representing a <span style='color: {clr_main}'>persistent increase in reported cases</span> of weapons loss and theft over time.
                 </ul>
                 <ul>
