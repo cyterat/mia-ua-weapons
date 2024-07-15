@@ -223,7 +223,9 @@ with st.spinner("Please wait a few seconds while I prepare everything...🔥"):
                 </ul>
                 <ul>
                     Russian <span style='color: {clr_main}'>full-scale invasion</span> of Ukraine in February 2022 contributed to yet <span style='color: {clr_main}'>another surge</span> in the number of lost and stolen weapons, 
-                    with nearly <span title='{abs(diff_2021_22):,} records' style='color: {clr_main}'>{abs(diff_2021_22 / model_region_year_total[model_region_year_total["date"].dt.year == 2021]["total"].sum() * 100):.0f}% more records</span> than in 2021. The similar tendency extended into 2023, although with a clear <span style='color: {clr_main}'>downward trend</span>.  
+                    with nearly <span title='{abs(diff_2021_22):,} records' style='color: {clr_main}'>{abs(diff_2021_22 / model_region_year_total[model_region_year_total["date"].dt.year == 2021]["total"].sum() * 100):.0f}% more records</span> than in 2021. Several peaks can be observed during that year, 
+                    representing a rapidly changing combat environment, as Ukraine regains control over large portions of its the territory. These peaks are swiftly followed by a significant decline, suggesting a normalization in the number of reported incidents, returning to prior levels. However, 
+                    the graph then reveals a steady and continuous rise in the following months, representing a <span style='color: {clr_main}'>persistent increase in reported cases</span> of weapons loss and theft over time.
                 </ul>
                 <ul>
                     The <span style='color: {clr_main}'>tiniest</span> share of the country records has the <span style='color: {clr_main}'>{bot.iloc[0,0]}</span> region, 
@@ -321,21 +323,21 @@ with st.spinner("Please wait a few seconds while I prepare everything...🔥"):
         st.markdown(
             f"""
             
-            * <span title='{model_weaponcategory_total.loc["Artillery",'total']} records, {model_weaponcategory_total.loc["Artillery",'total'] / model_weaponcategory_total['total'].sum():.2%} of total' style='color: {clr_main}'>Artillery</span><br><small> grenade launcher, mortar, ATGM, MANPAD, etc.</small>
+            * <span title='{model_weaponcategory_total.loc["Artillery",'total']} records, {model_weaponcategory_total.loc["Artillery",'total'] / model_weaponcategory_total['total'].sum():.2%} of total' style='color: {clr_main}'>Artillery</span><br> grenade launcher, mortar, ATGM, MANPAD, etc.</small>
             
-            * <span title='{model_weaponcategory_total.loc["Bladed",'total']} records, {model_weaponcategory_total.loc["Bladed",'total'] / model_weaponcategory_total['total'].sum():.2%} of total' style='color: {clr_main}'>Bladed</span><br><small> knife, sword, bayonet, saber, etc.</small>
+            * <span title='{model_weaponcategory_total.loc["Bladed",'total']} records, {model_weaponcategory_total.loc["Bladed",'total'] / model_weaponcategory_total['total'].sum():.2%} of total' style='color: {clr_main}'>Bladed</span><br> knife, sword, bayonet, saber, etc.</small>
             
-            * <span title='{model_weaponcategory_total.loc["Handguns",'total']} records, {model_weaponcategory_total.loc["Handguns",'total'] / model_weaponcategory_total['total'].sum():.2%} of total' style='color: {clr_main}'>Handguns</span><br><small> pistol, revolver, machine pistol, traumatic pistol, etc.</small>
+            * <span title='{model_weaponcategory_total.loc["Handguns",'total']} records, {model_weaponcategory_total.loc["Handguns",'total'] / model_weaponcategory_total['total'].sum():.2%} of total' style='color: {clr_main}'>Handguns</span><br> pistol, revolver, machine pistol, traumatic pistol, etc.</small>
             
-            * <span title='{model_weaponcategory_total.loc["Heavy firearms",'total']} records, {model_weaponcategory_total.loc["Heavy firearms",'total'] / model_weaponcategory_total['total'].sum():.2%} of total' style='color: {clr_main}'>Heavy firearms</span><br><small> autocannon, cannon, machine gun, anti-tank rifle, etc.</small>
+            * <span title='{model_weaponcategory_total.loc["Heavy firearms",'total']} records, {model_weaponcategory_total.loc["Heavy firearms",'total'] / model_weaponcategory_total['total'].sum():.2%} of total' style='color: {clr_main}'>Heavy firearms</span><br> autocannon, cannon, machine gun, anti-tank rifle, etc.</small>
             
-            * <span title='{model_weaponcategory_total.loc["Light firearms",'total']} records, {model_weaponcategory_total.loc["Light firearms",'total'] / model_weaponcategory_total['total'].sum():.2%} of total' style='color: {clr_main}'>Light firearms</span><br><small> assault rifle, carabine, shotgun, marksman rifle, etc.</small>
+            * <span title='{model_weaponcategory_total.loc["Light firearms",'total']} records, {model_weaponcategory_total.loc["Light firearms",'total'] / model_weaponcategory_total['total'].sum():.2%} of total' style='color: {clr_main}'>Light firearms</span><br> assault rifle, carabine, shotgun, marksman rifle, etc.</small>
             
-            * <span title='{model_weaponcategory_total.loc["Other",'total']} records, {model_weaponcategory_total.loc["Other",'total'] / model_weaponcategory_total['total'].sum():.2%} of total' style='color: {clr_main}'>Other</span><br><small> receiver, ammunition, crossbow, carabine replica, etc.</small>
+            * <span title='{model_weaponcategory_total.loc["Other",'total']} records, {model_weaponcategory_total.loc["Other",'total'] / model_weaponcategory_total['total'].sum():.2%} of total' style='color: {clr_main}'>Other</span><br> receiver, ammunition, crossbow, carabine replica, etc.</small>
             
-            * <span title='{model_weaponcategory_total.loc["Pneumatic&Flobert",'total']} records, {model_weaponcategory_total.loc["Pneumatic&Flobert",'total'] / model_weaponcategory_total['total'].sum():.2%} of total' style='color: {clr_main}'>Pneumatic&Flobert</span><br><small> pneumatic rifle, pneumatic pistol, Flobert rifle, Flobert revolver, etc.</small>
+            * <span title='{model_weaponcategory_total.loc["Pneumatic&Flobert",'total']} records, {model_weaponcategory_total.loc["Pneumatic&Flobert",'total'] / model_weaponcategory_total['total'].sum():.2%} of total' style='color: {clr_main}'>Pneumatic&Flobert</span><br> pneumatic rifle, pneumatic pistol, Flobert revolver, etc.</small>
             
-            * <span title='{model_weaponcategory_total.loc["Explosives",'total']} records, {model_weaponcategory_total.loc["Explosives",'total'] / model_weaponcategory_total['total'].sum():.2%} of total' style='color: {clr_main}'>Explosives</span><br><small> explosive material, grenade, rocket, shell, etc.</small>
+            * <span title='{model_weaponcategory_total.loc["Explosives",'total']} records, {model_weaponcategory_total.loc["Explosives",'total'] / model_weaponcategory_total['total'].sum():.2%} of total' style='color: {clr_main}'>Explosives</span><br> explosive material, grenade, rocket, shell, etc.</small>
             
             """,
             unsafe_allow_html=True,
