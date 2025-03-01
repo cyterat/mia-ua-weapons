@@ -23,7 +23,7 @@ jobs:
           wget --secure-protocol=TLSv1_2 -c --retry-connrefused --waitretry=1 --read-timeout=20 --timeout=15 -t 0 --continue -O "assets/weapons-wanted.json" "https://data.gov.ua/dataset/d0af9ba0-08b3-4bca-8508-02cffeaae8fd/resource/1fcab772-0b3c-4938-8f72-e60db343cbe5/download/weaponswanted.json"
 
       - name: upload json for pipeline job
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: weapons-wanted
           path: assets/weapons-wanted.json
@@ -54,7 +54,7 @@ jobs:
           pip install -r requirements.txt
 
       - name: download json for pipeline job
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v4
         with:
           name: weapons-wanted
           path: assets
