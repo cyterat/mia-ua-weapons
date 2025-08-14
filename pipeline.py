@@ -1,59 +1,146 @@
+import os
+import sys
+import logging
+# from datetime import datetime
+
 import pandas as pd
+import polars as pl
+import polars.selectors as cs
 import numpy as np
 
-import os
+# Set up logging
+logging.basicConfig(level=logging.DEBUG, format='%(asctime)s - %(levelname)s - %(message)s')
+logger = logging.getLogger(__name__)
+
+# CURRENT_DATE = datetime.now()
+FILE_PATH = os.path.join("assets","weapons-wanted.json")
 
 
-def import_data():
-    print("\n1/7 Import data...")
+def import_json() -> pl.LazyFrame:
+    """Imports JSON data into Polars LazyFrame.
+
+    Returns:
+        pl.LazyFrame: _description_
+    """
+
+    try:
+        df = pl.read_json(FILE_PATH) 
+
+        # Materialize and compute data info only if logger level is DEBUG
+        if logger.isEnabledFor(logging.DEBUG):
+            logger.debug(f"Rows: {df.height:,}")
+            logger.debug(f"Columns: {df.width}")
+            logger.debug(f"Estimated Size: {df.estimated_size('mb'):.0f} MB")
+            logger.debug(f"Schema: {df.schema}")
+            logger.debug(f"Nulls: {df.null_count().unpivot(variable_name='column',value_name='total_nulls').select(['column', 'total_nulls']).rows()}")
+            # logger.debug(f"Sample: {df.select(['weaponkind', 'organunit', 'reasonsearch', 'insertdate', 'theftdate']).head(1)}")
+            
+        return df.lazy()
     
-    # Path to the JSON file 
-    json_file_path = "assets/weapons-wanted.json"
-        
-    # Check if JSON file path exists
-    assert os.path.exists(json_file_path), "JSON file should exist in the provided path."
-
-    # Read the JSON data file into a Pandas DataFrame
-    parsed = pd.read_json(json_file_path, orient="records")
-
-    print("☑️ Data imported:")
-    print(f"\nRows --> {parsed.shape[0]:,}")
-    print(f"Columns --> {parsed.shape[1]}")
-    print(f"Memory usage --> {int(parsed.memory_usage(deep=True).sum()/1000000)} MB")
-    print(f"\nMissing values:\n{parsed.isna().sum() + parsed[parsed == ''].count()}")
-    return parsed
+    except FileNotFoundError:
+        logger.error(f"JSON artifact not found at {FILE_PATH}")
+        sys.exit(1)
+    except Exception as e:
+        logger.error(f"Unexpected error in import_json: {e.__class__.__name__}: {e}")
+        sys.exit(1)
 
 
-def cast_dtypes(parsed):
-    print("\n2/7 Cast data types...")
+def drop_duplicates(df: pl.LazyFrame) -> pl.LazyFrame:
+    """Drops duplicate records before filtering columns
 
-    df = parsed.loc[
-        :,
-        [
-            "weaponnumber",
-            "weaponkind",
-            "organunit",
-            "reasonsearch",
-            "insertdate",
-            "theftdate",
-        ],
-    ].copy()
+    Args:
+        df (pl.LazyFrame): imported lazy dataframe
 
-    # Removing duplicates
-    df = df.drop_duplicates()
+    Returns:
+        pl.LazyFrame: dataset with no duplicate records
+    """
 
-    # Cast date and other columns to 'datetime64[ns]' and 'string' types respectively
-    for c in df.columns:
-        if c in ["insertdate", "theftdate"]:
-            df[c] = pd.to_datetime(df[c], errors="coerce")
-        else:
-            df[c] = df[c].astype("string")
+    try:
+        df = df.unique(maintain_order=False, keep="any")
 
-    print(f"\nRows --> {df.shape[0]:,}")
-    print(f"Columns --> {df.shape[1]}")
-    print("☑️ Data types casted")
-    return df
+        # Materialize and compute data info only if logger level is DEBUG
+        if logger.isEnabledFor(logging.DEBUG):
+            logger.debug(f"Rows: {df.collect().height:,}")
 
+        return df
+    
+    except Exception as e:
+        logger.error(f"Unexpected error in drop_duplicates: {e.__class__.__name__}: {e}")
+        sys.exit(1)
+
+
+def select_columns(df: pl.LazyFrame) -> pl.LazyFrame:
+
+    try:
+        columns = ["weaponkind","organunit","reasonsearch","insertdate","theftdate"]  # Could be from config
+        return df.select(columns)
+    
+    except pl.ColumnNotFoundError as e:
+        logger.error(f"Required column missing: {e}")
+        sys.exit(1)
+    except Exception as e:
+        logger.error(f"Unexpected error in select_columns: {e}")
+        sys.exit(1)
+
+
+def cast_dtypes(df: pl.LazyFrame) -> pl.LazyFrame:
+
+    try:    
+        df = df.with_columns(
+            pl.col("weaponkind").cast(pl.String),
+            pl.col("organunit").cast(pl.String),
+            pl.col("reasonsearch").cast(pl.String),
+            pl.col("insertdate").str.strptime(pl.Datetime("us"), "%Y-%m-%dT%H:%M:%S"),
+            pl.col("theftdate").str.strptime(pl.Datetime("us"), "%Y-%m-%dT%H:%M:%S")
+        )
+
+        # Materialize and compute data info only if logger level is DEBUG
+        if logger.isEnabledFor(logging.DEBUG):
+            logger.debug(f"Rows: {df.collect().height:,}")
+            logger.debug(f"Schema: {df.collect_schema()}")
+    
+        return df
+
+    except pl.ComputeError as e:
+        logger.error(f"Type casting failed: {e}")
+        sys.exit(1)
+    except Exception as e:
+        logger.error(f"Unexpected error in cast_dtypes: {e}")
+        sys.exit(1)
+
+
+def drop_nulls(df: pl.LazyFrame) -> pl.LazyFrame:
+
+    try:
+        # Drop rows consisting of nulls only
+        df = df.filter(~pl.all_horizontal(pl.all().is_null()))
+        # Materialize and compute data info only if logger level is DEBUG
+        if logger.isEnabledFor(logging.DEBUG):
+            logger.debug(f"Rows after removal of records full of nulls: {df.collect().height:,}")
+
+        # Drop rows where any string values are missing
+        df = df.drop_nulls(subset=cs.alpha())
+        # Materialize and compute data info only if logger level is DEBUG
+        if logger.isEnabledFor(logging.DEBUG):
+            logger.debug(f"Rows after removal of records with missing string values: {df.collect().height:,}")
+
+        # Drop rows were both datetime columns contain nulls
+        df = df.filter((pl.col("insertdate").is_not_null() & pl.col("theftdate").is_not_null()))
+        # Materialize and compute data info only if logger level is DEBUG
+        if logger.isEnabledFor(logging.DEBUG):
+            logger.debug(f"Rows after removal of records with both datetime values missing: {df.collect().height:,}")
+
+        # return df
+        return df.collect().to_pandas() # THIS IS TEMPORARY RETURN
+
+    except Exception as e:
+        logger.error(f"Unexpected error in drop_nulls: {e}")
+        sys.exit(1)
+
+
+###############################################################
+                    # SCRIPT SPLIT HERE 
+###############################################################
 
 def column_reasonsearch(df):
     print("\n3/7 Clean 'reasonsearch' column...")
@@ -405,13 +492,42 @@ def export_data(df):
 
 
 if __name__ == "__main__":
-    (
-        import_data()
-        .pipe(cast_dtypes)
-        .pipe(column_reasonsearch)
-        .pipe(column_region)
-        .pipe(column_weaponcategory)
-        .pipe(column_date)
-        .pipe(export_data)
-    )
-    print(f"\n✅ Data Successfuly Exported To: assets/ua-mia-weapons.parquet.gzip\n")
+    # (
+    #     import_data()
+    #     .pipe(cast_dtypes)
+    #     .pipe(column_reasonsearch)
+    #     .pipe(column_region)
+    #     .pipe(column_weaponcategory)
+    #     .pipe(column_date)
+    #     .pipe(export_data)
+    # )
+    # print(f"\n✅ Data Successfuly Exported To: assets/ua-mia-weapons.parquet.gzip\n")
+    try:
+        logger.info("1/5 Importing data...")
+        df = import_json()
+        
+        logger.info("2/5 Dropping duplicate rows...")
+        df = drop_duplicates(df)
+
+        logger.info("3/5 Selecting required columns...")
+        df = select_columns(df)
+        
+        logger.info("4/5 Casting datatypes...")
+        df = cast_dtypes(df)
+        
+        logger.info("5/5 Dropping rows with missing values...")
+        df = drop_nulls(df)
+
+        df = column_reasonsearch(df)
+        df = column_region(df)
+        df = column_weaponcategory(df)
+        df = column_date(df)
+
+        print(df.head())
+
+
+    except Exception as e:
+        logger.critical(f"Pipeline run has failed. Unexpected error in: {e.__class__.__name__}: {e}")
+    
+
+    logger.info("Pipeline run was successful")
