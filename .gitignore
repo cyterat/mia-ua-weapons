@@ -3,3 +3,4 @@
 /elements/__pycache__
 /utils/__pycache__
 assets/weapons-wanted.json
+.mypy_cache
