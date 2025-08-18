@@ -608,7 +608,7 @@ def export_data(df: pl.LazyFrame, output_path: str) -> None:
         path=output_path,
         compression="gzip"
     )
-    logger.info(f"Exported data to {None}.")
+    logger.info(f"Exported data to {output_path}.")
 
     return None
 
