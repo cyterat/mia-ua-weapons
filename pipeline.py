@@ -15,7 +15,7 @@ logger = logging.getLogger(__name__)
 DEBUG_MODE = logger.isEnabledFor(logging.DEBUG)
 
 # CURRENT_DATE = datetime.now()
-FILE_PATH = os.path.join("assets","weapons-wanted.json")
+INPUT_PATH = os.path.join("assets","weapons-wanted.json")
 OUTPUT_PATH = os.path.join("assets","ua-mia-weapons.parquet.gzip")
 
 
@@ -39,6 +39,7 @@ def enable_debug_logs(
         is_debug (bool, optional): Boolean representing whether logger level is set to debug.
             Defaults to DEBUG_MODE.
     """
+
     if is_debug:
         if isinstance(df, pl.LazyFrame):
             # Get number of rows in a LazyFrame
@@ -98,13 +99,14 @@ def enable_debug_logs(
                     # SCRIPT SPLIT HERE
 ###############################################################
 
-def import_json() -> pl.LazyFrame:
+def import_json(input_path: str = INPUT_PATH) -> pl.LazyFrame:
     """Imports JSON data into Polars LazyFrame.
 
     Returns:
-        pl.LazyFrame: query plan (LazyFrame).
+        pl.LazyFrame: Query plan (LazyFrame).
     """
-    df = pl.read_json(FILE_PATH)
+    
+    df = pl.read_json(input_path)
 
     # Generate info logs
     enable_debug_logs(df, is_debug=True)
@@ -117,11 +119,12 @@ def drop_duplicates(df: pl.LazyFrame) -> pl.LazyFrame:
     """Drops duplicate records before filtering columns.
 
     Args:
-        df (pl.LazyFrame): Imported lazy dataframe.
+        df (pl.LazyFrame): Import query plan (LazyFrame).
 
     Returns:
         pl.LazyFrame: Query plan (LazyFrame).
     """
+
     df = df.unique(maintain_order=False, keep="any")
 
     # Generate info logs if logger level is DEBUG
@@ -158,6 +161,17 @@ def cast_dtypes(df: pl.LazyFrame) -> pl.LazyFrame:
 
 
 def drop_nulls(df: pl.LazyFrame) -> pl.LazyFrame:
+    """Removes rows using the following sequence of operations:
+    1) drops rows full of null values; 
+    2) drops rows with at least one string value missing; 
+    3) drops rows with both datetime values missing.
+
+    Args:
+        df (pl.LazyFrame): Query plan (LazyFrame) with correct data types.
+
+    Returns:
+        pl.LazyFrame: Query plan (LazyFrame).
+    """
 
     # Drop rows consisting of nulls only
     df = df.filter(~pl.all_horizontal(pl.all().is_null()))
@@ -185,11 +199,12 @@ def transform_column_reasonsearch(df: pl.LazyFrame) -> pl.LazyFrame:
     """Replaces UKR names of report types with ENG ones. Creates column 'report'.
 
     Args:
-        df (pl.LazyFrame): Post-extraction data.
+        df (pl.LazyFrame): Post-extraction query plan (LazyFrame).
 
     Returns:
         pl.DataFrame: Query plan (LazyFrame).
     """
+
     # Replace/translate report types to English
     df = df.with_columns(
         pl.col("reasonsearch").str.replace_many({"ВИКРАДЕННЯ":"Theft", "ВТРАТА":"Loss"})
@@ -208,11 +223,12 @@ def transform_column_region(df: pl.LazyFrame) -> pl.LazyFrame:
     """Replaces long MIA unit names with region names using regex. Creates column 'region'.
 
     Args:
-        df (pl.LazyFrame): Post-extraction data.
+        df (pl.LazyFrame): Post-extraction query plan (LazyFrame).
 
     Returns:
         pl.LazyFrame: Query plan (LazyFrame).
     """
+
     # Dictionary with oblasts names (keys) and their respective regular expressions (values)
     regex_oblasts = {
         "Uzhhorod": r"(?i)\bЗАКАРПАТ\w{0,6}.{1,5}\bобл",
@@ -298,10 +314,10 @@ def transform_column_weaponcategory(df: pl.LazyFrame) -> tuple[pl.LazyFrame, pl.
     """Creates a new column with broader weapon categories. Creates column 'weaponcategory'.
 
     Args:
-        df (pl.LazyFrame): Post-exctraction data.
+        df (pl.LazyFrame): Post-extraction query plan (LazyFrame).
 
     Returns:
-        tuple[pl.LazyFrame, pl.LazyFrame]: Lazy query plans for data with original weapon names and additional weapon mappings .
+        tuple[pl.LazyFrame, pl.LazyFrame]: Lazy query plans for data with original weapon names and additional weapon mappings.
     """
     
     # Temporary Series objects below will be later used to populate temporary DataFrame
@@ -443,11 +459,12 @@ def transform_column_weaponcategory(df: pl.LazyFrame) -> tuple[pl.LazyFrame, pl.
 
 
 def check_new_weapons(df: pl.LazyFrame, wps_df: pl.LazyFrame) -> pl.LazyFrame:
-    """Checks for new weapons, drops nulls redundant 'weaponkind' column, and removes rows with missing weapon categories.
+    """Checks for new weapons, drops nulls redundant 'weaponkind' column,
+    and removes rows with missing weapon categories.
 
     Args:
-        df (pl.LazyFrame): Lazy query plan for data with original weapon names.
-        wps_df (pl.LazyFrame): Lazy query plan for additional weapon mappings.
+        df (pl.LazyFrame): Query plan (LazyFrame) with original weapon names.
+        wps_df (pl.LazyFrame): Query plan (LazyFrame) with additional weapon mappings.
 
     Returns:
         pl.LazyFrame: Query plan (LazyFrame).
@@ -492,7 +509,7 @@ def transform_column_date(df: pl.LazyFrame) -> pl.LazyFrame:
     Removes and substitutes records preserving historical accuracy during post-independence period.
 
     Args:
-        df (pl.LazyFrame): Post-extraction data.
+        df (pl.LazyFrame): Post-extraction query plan (LazyFrame).
 
     Returns:
         pl.LazyFrame: Query plan (LazyFrame).
@@ -526,6 +543,14 @@ def transform_column_date(df: pl.LazyFrame) -> pl.LazyFrame:
 ###############################################################
 
 def sort_columns (df: pl.LazyFrame) -> pl.LazyFrame:
+    """Sorts and reorders columns.
+
+    Args:
+        df (pl.LazyFrame): Post-transformation query plan (LazyFrame).
+
+    Returns:
+        pl.LazyFrame: Query plan (LazyFrame).
+    """
 
     df = df.match_to_schema({
         "report": pl.String,
@@ -545,7 +570,7 @@ def export_data(df: pl.LazyFrame, output_path: str) -> None:
     """Exports data to gzip compressed parquet file.
 
     Args:
-        df (pl.LazyFrame): Sorted and reordered LazyFrame.
+        df (pl.LazyFrame): Query plan (LazyFrame) with sorted and reordered columns.
         output_path: File path to which the data should be wrtitten.
     """
 
@@ -556,6 +581,7 @@ def export_data(df: pl.LazyFrame, output_path: str) -> None:
     logger.info(f"Exported data to {None}.")
 
     return None
+
 
 if __name__ == "__main__":
 
