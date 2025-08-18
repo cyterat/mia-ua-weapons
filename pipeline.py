@@ -121,7 +121,7 @@ def drop_duplicates(df: pl.LazyFrame) -> pl.LazyFrame:
     Returns:
         pl.LazyFrame: Query plan (LazyFrame).
     """
-    
+
     df = df.unique(maintain_order=False, keep="any")
 
     # Generate info logs if logger level is DEBUG
@@ -510,7 +510,10 @@ def check_new_weapons(df: pl.LazyFrame, wps_df: pl.LazyFrame) -> pl.LazyFrame:
     else:
         logger.info("No records with new weapons found.")
 
-    df = df.drop("weaponkind").drop_nulls()
+    # Drop redundant column
+    df = df.drop("weaponkind")
+    # Drop all rows that contain any nulls
+    df = df.drop_nulls()
 
     # Generate info logs if logger level is DEBUG
     enable_debug_logs(df, is_debug=DEBUG_MODE)
@@ -554,13 +557,16 @@ def transform_column_date(df: pl.LazyFrame) -> pl.LazyFrame:
         crimea_condition = (pl.col("region") == "Simferopol") & (pl.col("date") > last_dt_crimea)
         # Preserve reference column
         date_col = pl.col("date")
+        # Create expression with date replacement logic
         date_col = (
             pl.when(crimea_condition)
             .then(pl.lit(last_dt_crimea))
             .otherwise(date_col)
             .alias("date")
         )
-        return df.with_columns(date_col)
+        # Apply transformation using expression  
+        df =  df.with_columns(date_col)
+        return df
     
     df = drop_old_rec(df)
     df = combine_crimean_upd(df)
