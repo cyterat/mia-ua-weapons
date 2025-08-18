@@ -9,7 +9,7 @@ import polars.selectors as cs
 import numpy as np
 
 # Set up logging
-logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
+logging.basicConfig(level=logging.DEBUG, format='%(asctime)s - %(levelname)s - %(message)s')
 logger = logging.getLogger(__name__)
 
 DEBUG_MODE = logger.isEnabledFor(logging.DEBUG)
@@ -38,75 +38,6 @@ def import_json() -> pl.LazyFrame:
 
     return df.lazy()
 
-
-def drop_duplicates(df: pl.LazyFrame) -> pl.LazyFrame:
-    """Drops duplicate records before filtering columns.
-
-    Args:
-        df (pl.LazyFrame): Imported lazy dataframe.
-
-    Returns:
-        pl.LazyFrame: Query plan (LazyFrame).
-    """
-    df = df.unique(maintain_order=False, keep="any")
-
-    # Materialize and compute data info only if logger level is DEBUG
-    if logger.isEnabledFor(logging.DEBUG):
-        logger.debug(f"Rows: {df.select(pl.len()).collect().item():,}")
-
-    return df
-
-
-def select_columns(df: pl.LazyFrame) -> pl.LazyFrame:
-
-    columns = ["weaponkind","organunit","reasonsearch","insertdate","theftdate"]
-    return df.select(columns)
-
-
-def cast_dtypes(df: pl.LazyFrame) -> pl.LazyFrame:
-
-    df = df.with_columns(
-        pl.col("weaponkind").cast(pl.String),
-        pl.col("organunit").cast(pl.String),
-        pl.col("reasonsearch").cast(pl.String),
-        pl.col("insertdate").str.strptime(pl.Datetime("us"), "%Y-%m-%dT%H:%M:%S"),
-        pl.col("theftdate").str.strptime(pl.Datetime("us"), "%Y-%m-%dT%H:%M:%S")
-    )
-
-    # Materialize and compute data info only if logger level is DEBUG
-    if logger.isEnabledFor(logging.DEBUG):
-        logger.debug(f"Rows: {df.select(pl.len()).collect().item():,}")
-        logger.debug(f"Schema: {df.collect_schema()}")
-
-    return df
-
-
-def drop_nulls(df: pl.LazyFrame) -> pl.LazyFrame:
-
-    # Drop rows consisting of nulls only
-    df = df.filter(~pl.all_horizontal(pl.all().is_null()))
-    # Materialize and compute data info only if logger level is DEBUG
-    if logger.isEnabledFor(logging.DEBUG):
-        logger.debug(f"Rows after removal of records full of nulls: {df.select(pl.len()).collect().item():,}")
-
-    # Drop rows where any string values are missing
-    df = df.drop_nulls(subset=cs.alpha())
-    # Materialize and compute data info only if logger level is DEBUG
-    if logger.isEnabledFor(logging.DEBUG):
-        logger.debug(f"Rows after removal of records with missing string values: {df.select(pl.len()).collect().item():,}")
-
-    # Drop rows were both datetime columns contain nulls
-    df = df.filter((pl.col("insertdate").is_not_null() & pl.col("theftdate").is_not_null()))
-    # Materialize and compute data info only if logger level is DEBUG
-    if logger.isEnabledFor(logging.DEBUG):
-        logger.debug(f"Rows after removal of records with both datetime values missing: {df.select(pl.len()).collect().item():,}")
-
-    return df
-
-
-###############################################################
-                    # SCRIPT SPLIT HERE
-###############################################################
 
 def enable_debug_logs(
         df: pl.LazyFrame,
@@ -142,20 +73,86 @@ def enable_debug_logs(
             .collect()
             .rows()
         )
-        # Show the schema of a LazyFrame, containing column names alongside their data types
-        schema: pl.Schema = df.collect_schema()
-        # Generate a dataframe sample of the first (oldest) record
-        first_dt: pl.DataFrame = df.head(1).collect()
-        # Generate a dataframe sample of the last (most recent) record
-        last_dt: pl.DataFrame = df.tail(1).collect()
+        # Generate a dataframe sample of the first record (dtypes included)
+        first: pl.DataFrame = df.head(1).collect()
+        # Generate a dataframe sample of the last record (dtypes included)
+        last: pl.DataFrame = df.tail(1).collect()
         
         logger.debug(f"Rows: {rows:,}")
         logger.debug(f"Nulls: {nulls}")
-        logger.debug(f"Schema: {schema}")
-        logger.debug(f"Sample (First date): {first_dt}")
-        logger.debug(f"Sample (Last date): {last_dt}")
+        logger.debug(f"Sample (First date): {first}")
+        logger.debug(f"Sample (Last date): {last}")
 
     return None
+
+
+def drop_duplicates(df: pl.LazyFrame) -> pl.LazyFrame:
+    """Drops duplicate records before filtering columns.
+
+    Args:
+        df (pl.LazyFrame): Imported lazy dataframe.
+
+    Returns:
+        pl.LazyFrame: Query plan (LazyFrame).
+    """
+    df = df.unique(maintain_order=False, keep="any")
+
+    # Generate info logs if logger level is DEBUG
+    enable_debug_logs(df, is_debug=DEBUG_MODE)
+
+    return df
+
+
+def select_columns(df: pl.LazyFrame) -> pl.LazyFrame:
+
+    columns = ["weaponkind","organunit","reasonsearch","insertdate","theftdate"]
+    df = df.select(columns)
+
+    # Generate info logs if logger level is DEBUG
+    enable_debug_logs(df, is_debug=DEBUG_MODE)
+
+    return df
+
+
+def cast_dtypes(df: pl.LazyFrame) -> pl.LazyFrame:
+
+    df = df.with_columns(
+        pl.col("weaponkind").cast(pl.String),
+        pl.col("organunit").cast(pl.String),
+        pl.col("reasonsearch").cast(pl.String),
+        pl.col("insertdate").str.strptime(pl.Datetime("us"), "%Y-%m-%dT%H:%M:%S"),
+        pl.col("theftdate").str.strptime(pl.Datetime("us"), "%Y-%m-%dT%H:%M:%S")
+    )
+
+    # Generate info logs if logger level is DEBUG
+    enable_debug_logs(df, is_debug=DEBUG_MODE)
+
+    return df
+
+
+def drop_nulls(df: pl.LazyFrame) -> pl.LazyFrame:
+
+    # Drop rows consisting of nulls only
+    df = df.filter(~pl.all_horizontal(pl.all().is_null()))
+    # Generate info logs if logger level is DEBUG
+    enable_debug_logs(df, is_debug=DEBUG_MODE)
+
+    # Drop rows where any string values are missing
+    df = df.drop_nulls(subset=cs.alpha())
+    # Generate info logs if logger level is DEBUG
+    enable_debug_logs(df, is_debug=DEBUG_MODE)
+
+    # Drop rows were both datetime columns contain nulls
+    df = df.filter((pl.col("insertdate").is_not_null() & pl.col("theftdate").is_not_null()))
+    # Generate info logs if logger level is DEBUG
+    enable_debug_logs(df, is_debug=DEBUG_MODE)
+
+    return df
+
+
+###############################################################
+                    # SCRIPT SPLIT HERE
+###############################################################
 
 def transform_column_reasonsearch(df: pl.LazyFrame) -> pl.LazyFrame:
     """Replaces UKR names of report types with ENG ones. Creates column 'report'.
@@ -174,11 +171,8 @@ def transform_column_reasonsearch(df: pl.LazyFrame) -> pl.LazyFrame:
 
     df = df.rename({"reasonsearch":"report"})
 
-    # Materialize and compute data info only if logger level is DEBUG
-    if logger.isEnabledFor(logging.DEBUG):
-        logger.debug(f"Rows: {df.select(pl.len()).collect().item():,}")
-        logger.debug(f"Schema: {df.collect_schema()}")
-        logger.debug(f"Sample: {df.head(1).collect()}")
+    # Generate info logs if logger level is DEBUG
+    enable_debug_logs(df, is_debug=DEBUG_MODE)
 
     return df
 
@@ -267,11 +261,8 @@ def transform_column_region(df: pl.LazyFrame) -> pl.LazyFrame:
     # Store combined nested expression tree in a new column
     df = df.with_columns(region_col.alias("region")).drop("organunit")
 
-    # Materialize and compute data info only if logger level is DEBUG
-    if logger.isEnabledFor(logging.DEBUG):
-        logger.debug(f"Rows: {df.select(pl.len()).collect().item():,}")
-        logger.debug(f"Schema: {df.collect_schema()}")
-        logger.debug(f"Sample: {df.head(1).collect()}")
+    # Generate info logs if logger level is DEBUG
+    enable_debug_logs(df, is_debug=DEBUG_MODE)
 
     return df
 
@@ -418,23 +409,8 @@ def transform_column_weaponcategory(df: pl.LazyFrame) -> tuple[pl.LazyFrame, pl.
     # Join weapon names with matching weapon categories 
     df = df.join(other=wps_df, on="weaponkind", how="left")
 
-    # Materialize and compute data info only if logger level is DEBUG
-    if logger.isEnabledFor(logging.DEBUG):
-        _nulls = (
-            df
-            .null_count()
-            .unpivot(
-                variable_name='column',
-                value_name='total_nulls'
-                )
-            .select(['column', 'total_nulls'])
-            .collect()
-            .rows()
-            
-        )
-        logger.debug(f"Rows: {df.select(pl.len()).collect().item():,}")
-        logger.debug(f"Nulls: {_nulls}")
-        logger.debug(f"Sample: {df.head(1).collect()}")
+    # Generate info logs if logger level is DEBUG
+    enable_debug_logs(df, is_debug=DEBUG_MODE)
 
     return df, wps_df 
 
@@ -478,11 +454,8 @@ def check_new_weapons(df: pl.LazyFrame, wps_df: pl.LazyFrame) -> pl.LazyFrame:
 
     df = df.drop("weaponkind").drop_nulls()
 
-    # Materialize and compute data info only if logger level is DEBUG
-    if logger.isEnabledFor(logging.DEBUG):
-        logger.debug(f"Rows: {df.select(pl.len()).collect().item():,}")
-        logger.debug(f"Schema: {df.collect_schema()}")
-        logger.debug(f"Sample: {df.head(1).collect()}")
+    # Generate info logs if logger level is DEBUG
+    enable_debug_logs(df, is_debug=DEBUG_MODE)
 
     return df
     
@@ -507,8 +480,6 @@ def transform_column_date(df: pl.LazyFrame) -> pl.LazyFrame:
     # Excluding Ukrainian SSR records from DataFrame
     _dt_independence = datetime(year=1991, month=8, day=24)
     df = df.filter(pl.col("date") >= _dt_independence).sort(by="date", descending=False)
-    logger.debug(f"Rows: {df.select(pl.len()).collect().item():,}")
-    logger.debug(f"Schema: {df.collect_schema()}")
 
     # Crimean records
     date_col = pl.col("date")
@@ -518,21 +489,8 @@ def transform_column_date(df: pl.LazyFrame) -> pl.LazyFrame:
 
     df = df.with_columns(date_col)
 
-    # Materialize and compute data info only if logger level is DEBUG
-    if logger.isEnabledFor(logging.DEBUG):
-        _nulls = (
-            df
-            .null_count()
-            .unpivot(variable_name='column', value_name='total_nulls')
-            .select(['column', 'total_nulls'])
-            .collect()
-            .rows()
-        )
-        logger.debug(f"Rows: {df.select(pl.len()).collect().item():,}")
-        logger.debug(f"Schema: {df.collect_schema()}")
-        logger.debug(f"Sample (First ever record): {df.head(1).collect()}")
-        logger.debug(f"Sample (Max date for Crimea): {df.filter(pl.col('region')=='Simferopol').tail(1).collect()}")
-        logger.debug(f"Nulls: {_nulls}")
+    # Generate info logs if logger level is DEBUG
+    enable_debug_logs(df, is_debug=DEBUG_MODE)
 
     return df
 
@@ -549,6 +507,9 @@ def sort_columns (df: pl.LazyFrame) -> pl.LazyFrame:
         "date": pl.Datetime("us")
     })
     df = df.sort(by=["date", "region"], descending=False)
+
+    # Generate info logs if logger level is DEBUG
+    enable_debug_logs(df, is_debug=DEBUG_MODE)
     
     return df
 
@@ -566,6 +527,7 @@ def export_data(df: pl.LazyFrame, output_path: str) -> None:
         compression="gzip"
     )
     logger.info(f"Exported data to {None}.")
+
     return None
 
 if __name__ == "__main__":
@@ -620,7 +582,7 @@ if __name__ == "__main__":
         df = sort_columns(df)
 
         logger.info("2/2 Export data...")
-        export_data(df, OUTPUT_PATH)
+        # export_data(df, OUTPUT_PATH)
 
         logger.info("Pipeline run was successful.")
 
