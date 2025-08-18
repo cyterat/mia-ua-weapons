@@ -3,18 +3,15 @@ import sys
 import logging
 from datetime import datetime
 
-import pandas as pd
 import polars as pl
 import polars.selectors as cs
-import numpy as np
+
 
 # Set up logging
 logging.basicConfig(level=logging.DEBUG, format='%(asctime)s - %(levelname)s - %(message)s')
 logger = logging.getLogger(__name__)
 
 DEBUG_MODE = logger.isEnabledFor(logging.DEBUG)
-
-# CURRENT_DATE = datetime.now()
 INPUT_PATH = os.path.join("assets","weapons-wanted.json")
 OUTPUT_PATH = os.path.join("assets","ua-mia-weapons.parquet.gzip")
 
@@ -205,7 +202,6 @@ def drop_nulls(df: pl.LazyFrame) -> pl.LazyFrame:
     enable_debug_logs(df, is_debug=DEBUG_MODE, name="Dropped rows with both datetime values missing.")
 
     return df
-
 
 ###############################################################
                     # SCRIPT SPLIT HERE
@@ -642,12 +638,10 @@ if __name__ == "__main__":
         df = sort_columns(df)
 
         logger.info("2/2 Export data...")
-        # export_data(df, OUTPUT_PATH)
+        export_data(df, OUTPUT_PATH)
 
         logger.info("Pipeline run was successful.")
 
     except Exception as e:
         logger.critical(f"Pipeline run has failed. {e.__class__.__name__}: {e}")
         sys.exit(1)
-
-    print(pd.read_parquet(OUTPUT_PATH).head())
