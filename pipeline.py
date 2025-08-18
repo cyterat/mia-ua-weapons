@@ -105,7 +105,7 @@ def import_json(input_path: str = INPUT_PATH) -> pl.LazyFrame:
     Returns:
         pl.LazyFrame: Query plan (LazyFrame).
     """
-    
+
     df = pl.read_json(input_path)
 
     # Generate info logs
@@ -134,6 +134,14 @@ def drop_duplicates(df: pl.LazyFrame) -> pl.LazyFrame:
 
 
 def select_columns(df: pl.LazyFrame) -> pl.LazyFrame:
+    """Selects columns from the available dataset.
+
+    Args:
+        df (pl.LazyFrame): Query plan (LazyFrame) with no duplicates.
+
+    Returns:
+        pl.LazyFrame: Query plan (LazyFrame).
+    """
 
     columns = ["weaponkind","organunit","reasonsearch","insertdate","theftdate"]
     df = df.select(columns)
@@ -145,6 +153,14 @@ def select_columns(df: pl.LazyFrame) -> pl.LazyFrame:
 
 
 def cast_dtypes(df: pl.LazyFrame) -> pl.LazyFrame:
+    """Casts correct data types onto columns.
+
+    Args:
+        df (pl.LazyFrame): Query plan (LazyFrame) with selected columns.
+
+    Returns:
+        pl.LazyFrame: Query plan (LazyFrame).
+    """
 
     df = df.with_columns(
         pl.col("weaponkind").cast(pl.String),
