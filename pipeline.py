@@ -41,10 +41,13 @@ def import_json() -> pl.LazyFrame:
 
 def enable_debug_logs(
         df: pl.LazyFrame,
-        is_debug: bool = DEBUG_MODE
+        is_debug: bool = DEBUG_MODE,
+        name: None | str = None
     ) -> None:
     """This function is used to display detailed information about dataset
     that the function outside currently uses.
+
+    Allows to set custom name for easier logs navigation.
     
     It materializes LazyFrame and computes info only if logger level is DEBUG, 
     which is represented by 'is_debug' parameter.
@@ -78,10 +81,12 @@ def enable_debug_logs(
         # Generate a dataframe sample of the last record (dtypes included)
         last: pl.DataFrame = df.tail(1).collect()
         
+        if isinstance(name, str):
+            logger.debug(name)
         logger.debug(f"Rows: {rows:,}")
         logger.debug(f"Nulls: {nulls}")
-        logger.debug(f"Sample (First date): {first}")
-        logger.debug(f"Sample (Last date): {last}")
+        logger.debug(f"Sample (First): {first}")
+        logger.debug(f"Sample (Last): {last}")
 
     return None
 
@@ -135,17 +140,17 @@ def drop_nulls(df: pl.LazyFrame) -> pl.LazyFrame:
     # Drop rows consisting of nulls only
     df = df.filter(~pl.all_horizontal(pl.all().is_null()))
     # Generate info logs if logger level is DEBUG
-    enable_debug_logs(df, is_debug=DEBUG_MODE)
+    enable_debug_logs(df, is_debug=DEBUG_MODE, name="Dropped rows full of nulls.")
 
     # Drop rows where any string values are missing
     df = df.drop_nulls(subset=cs.alpha())
     # Generate info logs if logger level is DEBUG
-    enable_debug_logs(df, is_debug=DEBUG_MODE)
+    enable_debug_logs(df, is_debug=DEBUG_MODE, name="Dropped rows with any string values missing.")
 
     # Drop rows were both datetime columns contain nulls
     df = df.filter((pl.col("insertdate").is_not_null() & pl.col("theftdate").is_not_null()))
     # Generate info logs if logger level is DEBUG
-    enable_debug_logs(df, is_debug=DEBUG_MODE)
+    enable_debug_logs(df, is_debug=DEBUG_MODE, name="Dropped rows with both datetime values missing.")
 
     return df
 
