@@ -19,28 +19,8 @@ FILE_PATH = os.path.join("assets","weapons-wanted.json")
 OUTPUT_PATH = os.path.join("assets","ua-mia-weapons.parquet.gzip")
 
 
-def import_json() -> pl.LazyFrame:
-    """Imports JSON data into Polars LazyFrame.
-
-    Returns:
-        pl.LazyFrame: query plan (LazyFrame).
-    """
-    df = pl.read_json(FILE_PATH)
-
-    # Materialize and compute data info only if logger level is DEBUG
-    if logger.isEnabledFor(logging.DEBUG):
-        logger.debug(f"Rows: {df.height:,}")
-        logger.debug(f"Columns: {df.width}")
-        logger.debug(f"Estimated Size: {df.estimated_size('mb'):.0f} MB")
-        logger.debug(f"Schema: {df.collect_schema()}")
-        logger.debug(f"Nulls: {df.null_count().unpivot(variable_name='column',value_name='total_nulls').select(['column', 'total_nulls']).rows()}")
-        logger.debug(f"Sample: {df.select(['weaponkind', 'organunit', 'reasonsearch', 'insertdate', 'theftdate']).head(1)}")
-
-    return df.lazy()
-
-
 def enable_debug_logs(
-        df: pl.LazyFrame,
+        df: pl.LazyFrame | pl.DataFrame,
         is_debug: bool = DEBUG_MODE,
         name: None | str = None
     ) -> None:
@@ -60,26 +40,50 @@ def enable_debug_logs(
             Defaults to DEBUG_MODE.
     """
     if is_debug:
-        # Get number of rows in a LazyFrame
-        rows: int = (
-            df
-            .select(pl.len())
-            .collect()
-            .item()
-        )
-        # Generate a dataframe with a number of null values for each column
-        nulls: list[tuple[str,int]] = (
-            df
-            .null_count()
-            .unpivot(variable_name='column', value_name='total_nulls')
-            .select(['column', 'total_nulls'])
-            .collect()
-            .rows()
-        )
-        # Generate a dataframe sample of the first record (dtypes included)
-        first: pl.DataFrame = df.head(1).collect()
-        # Generate a dataframe sample of the last record (dtypes included)
-        last: pl.DataFrame = df.tail(1).collect()
+        if isinstance(df, pl.LazyFrame):
+            # Get number of rows in a LazyFrame
+            rows: int = (
+                df
+                .select(pl.len())
+                .collect()
+                .item()
+            )
+            # Generate a dataframe with a number of null values for each column
+            nulls: list[tuple[str,int]] = (
+                df
+                .null_count()
+                .unpivot(variable_name='column', value_name='total_nulls')
+                .select(['column', 'total_nulls'])
+                .collect()
+                .rows()
+            )
+            # Generate a dataframe sample of the first record (dtypes included)
+            first: pl.DataFrame = df.head(1).collect()
+            # Generate a dataframe sample of the last record (dtypes included)
+            last: pl.DataFrame = df.tail(1).collect()
+
+        elif isinstance(df, pl.DataFrame):
+            # Get number of rows in a LazyFrame
+            rows = (
+                df
+                .select(pl.len())
+                .item()
+            )
+            # Generate a dataframe with a number of null values for each column
+            nulls = (
+                df
+                .null_count()
+                .unpivot(variable_name='column', value_name='total_nulls')
+                .select(['column', 'total_nulls'])
+                .rows()
+            )
+            # Generate a dataframe sample of the first record (dtypes included)
+            first = df.head(1)
+            # Generate a dataframe sample of the last record (dtypes included)
+            last = df.tail(1)
+
+        else:
+            return None
         
         if isinstance(name, str):
             logger.debug(name)
@@ -89,6 +93,24 @@ def enable_debug_logs(
         logger.debug(f"Sample (Last): {last}")
 
     return None
+
+###############################################################
+                    # SCRIPT SPLIT HERE
+###############################################################
+
+def import_json() -> pl.LazyFrame:
+    """Imports JSON data into Polars LazyFrame.
+
+    Returns:
+        pl.LazyFrame: query plan (LazyFrame).
+    """
+    df = pl.read_json(FILE_PATH)
+
+    # Generate info logs
+    enable_debug_logs(df, is_debug=True)
+    logger.debug(f"Estimated Size: {df.estimated_size('mb'):.0f} MB")
+
+    return df.lazy()
 
 
 def drop_duplicates(df: pl.LazyFrame) -> pl.LazyFrame:
