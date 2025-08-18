@@ -63,7 +63,7 @@ def enable_debug_logs(
             last: pl.DataFrame = df.tail(1).collect()
 
         elif isinstance(df, pl.DataFrame):
-            # Get number of rows in a LazyFrame
+            # Get number of rows in a DataFrame
             rows = (
                 df
                 .select(pl.len())
@@ -558,16 +558,7 @@ def export_data(df: pl.LazyFrame, output_path: str) -> None:
     return None
 
 if __name__ == "__main__":
-    # (
-    #     import_data()
-    #     .pipe(cast_dtypes)
-    #     .pipe(transform_column_reasonsearch)
-    #     .pipe(transform_column_region)
-    #     .pipe(transform_column_weaponcategory)
-    #     .pipe(transform_column_date)
-    #     .pipe(export_data)
-    # )
-    # print(f"\n✅ Data Successfuly Exported To: assets/ua-mia-weapons.parquet.gzip\n")
+
     try:
         logger.info("1/5 Importing data...")
         df = import_json()
