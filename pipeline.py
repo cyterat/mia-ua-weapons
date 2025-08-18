@@ -121,7 +121,7 @@ def drop_duplicates(df: pl.LazyFrame) -> pl.LazyFrame:
     Returns:
         pl.LazyFrame: Query plan (LazyFrame).
     """
-
+    
     df = df.unique(maintain_order=False, keep="any")
 
     # Generate info logs if logger level is DEBUG
@@ -332,7 +332,7 @@ def transform_column_weaponcategory(df: pl.LazyFrame) -> tuple[pl.LazyFrame, pl.
         tuple[pl.LazyFrame, pl.LazyFrame]: Lazy query plans for data with original weapon names and additional weapon mappings.
     """
     
-    # Temporary Series objects below will be later used to populate temporary DataFrame
+    # Temporary Series objects below will be later used to populate a DataFrame
     bladed = pl.LazyFrame(
         data={"Bladed":[
             "КИНДЖАЛ",
@@ -489,6 +489,7 @@ def check_new_weapons(df: pl.LazyFrame, wps_df: pl.LazyFrame) -> pl.LazyFrame:
         new_weapons = set()
         count = 0
 
+        # Store weaponkind values that don't have respective weaponcategory value
         wep_list = (
             df
             .filter(pl.col("weaponcategory").is_null())
@@ -498,6 +499,7 @@ def check_new_weapons(df: pl.LazyFrame, wps_df: pl.LazyFrame) -> pl.LazyFrame:
             .to_list()
         )
 
+        # Iterate over list of (new) weapons to check if those values are present in current wps_df dataset
         for w in wep_list: 
             if w not in wps_df.collect().get_column("weaponkind"):
                 new_weapons.add(w)
@@ -527,9 +529,9 @@ def transform_column_date(df: pl.LazyFrame) -> pl.LazyFrame:
         pl.LazyFrame: Query plan (LazyFrame).
     """
 
-    # Substituting missing values in theftdate with those from the insertdate column
+    # Substitute missing values in theftdate with those from the insertdate column
     df = df.with_columns(pl.coalesce(["theftdate","insertdate"]).alias("date"))
-    # Dropping redundant date columns
+    # Drop redundant date columns
     df = df.drop("insertdate","theftdate")
 
     def drop_old_rec(df: pl.LazyFrame) -> pl.LazyFrame:
@@ -550,7 +552,7 @@ def transform_column_date(df: pl.LazyFrame) -> pl.LazyFrame:
         last_dt_crimea = datetime(year=2014, month=3, day=24)
         # Store filters
         crimea_condition = (pl.col("region") == "Simferopol") & (pl.col("date") > last_dt_crimea)
-
+        # Preserve reference column
         date_col = pl.col("date")
         date_col = (
             pl.when(crimea_condition)
@@ -581,13 +583,15 @@ def sort_columns (df: pl.LazyFrame) -> pl.LazyFrame:
     Returns:
         pl.LazyFrame: Query plan (LazyFrame).
     """
-
+    
+    # Apply schema to reorder columns
     df = df.match_to_schema({
         "report": pl.String,
         "region": pl.String, 
         "weaponcategory": pl.String, 
         "date": pl.Datetime("us")
     })
+
     df = df.sort(by=["date", "region"], descending=False)
 
     # Generate info logs if logger level is DEBUG
@@ -604,6 +608,7 @@ def export_data(df: pl.LazyFrame, output_path: str) -> None:
         output_path: File path to which the data should be wrtitten.
     """
 
+    # Write data to compressed parquet file
     df.sink_parquet(
         path=output_path,
         compression="gzip"
