@@ -12,6 +12,8 @@ import numpy as np
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 logger = logging.getLogger(__name__)
 
+DEBUG_MODE = logger.isEnabledFor(logging.DEBUG)
+
 # CURRENT_DATE = datetime.now()
 FILE_PATH = os.path.join("assets","weapons-wanted.json")
 OUTPUT_PATH = os.path.join("assets","ua-mia-weapons.parquet.gzip")
@@ -105,6 +107,48 @@ def drop_nulls(df: pl.LazyFrame) -> pl.LazyFrame:
 ###############################################################
                     # SCRIPT SPLIT HERE
 ###############################################################
+
+def enable_debug_logs(df: pl.LazyFrame, is_debug: bool = DEBUG_MODE) -> None:
+    """Materialize and compute data info only if logger level is DEBUG.
+
+    Args:
+        df (pl.LazyFrame): Query plan (LazyFrame) to use for dataset info extraction.
+        is_debug (bool, optional): Boolean representing whether logger level is set to debug. Defaults to DEBUG_MODE.
+
+    Returns:
+        _type_: _description_
+    """
+    if is_debug:
+        # Get number of rows in a LazyFrame
+        rows: int = (
+            df
+            .select(pl.len())
+            .collect()
+            .item()
+        )
+        # Generate a dataframe with a number of null values for each column
+        nulls: list[tuple[str,int]] = (
+            df
+            .null_count()
+            .unpivot(variable_name='column', value_name='total_nulls')
+            .select(['column', 'total_nulls'])
+            .collect()
+            .rows()
+        )
+        # Show the schema of a LazyFrame, containing column names alongside their data types
+        schema: pl.Schema = df.collect_schema()
+        # Generate a dataframe sample of the first (oldest) record
+        first_dt: pl.DataFrame = df.head(1).collect()
+        # Generate a dataframe sample of the last (most recent) record
+        last_dt: pl.DataFrame = df.tail(1).collect()
+        
+        logger.debug(f"Rows: {rows:,}")
+        logger.debug(f"Nulls: {nulls}")
+        logger.debug(f"Schema: {schema}")
+        logger.debug(f"Sample (First date): {first_dt}")
+        logger.debug(f"Sample (Last date): {last_dt}")
+
+    return None
 
 def transform_column_reasonsearch(df: pl.LazyFrame) -> pl.LazyFrame:
     """Replaces UKR names of report types with ENG ones. Creates column 'report'.
