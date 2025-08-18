@@ -529,21 +529,39 @@ def transform_column_date(df: pl.LazyFrame) -> pl.LazyFrame:
 
     # Substituting missing values in theftdate with those from the insertdate column
     df = df.with_columns(pl.coalesce(["theftdate","insertdate"]).alias("date"))
-
     # Dropping redundant date columns
     df = df.drop("insertdate","theftdate")
 
-    # Excluding Ukrainian SSR records from DataFrame
-    _dt_independence = datetime(year=1991, month=8, day=24)
-    df = df.filter(pl.col("date") >= _dt_independence).sort(by="date", descending=False)
+    def drop_old_rec(df: pl.LazyFrame) -> pl.LazyFrame:
+        """Excludes Ukrainian SSR records from DataFrame."""
+        # Store date of UKR independence
+        dt_independence = datetime(year=1991, month=8, day=24)
+        # Filter out pre-independence records
+        df = (
+            df
+            .filter(pl.col("date") >= dt_independence)
+            .sort(by="date", descending=False)
+        )
+        return df
+    
+    def combine_crimean_upd(df: pl.LazyFrame) -> pl.LazyFrame:
+        """Applies modifications to Crimean records."""
+        # Store date of de-facto lost control over records
+        last_dt_crimea = datetime(year=2014, month=3, day=24)
+        # Store filters
+        crimea_condition = (pl.col("region") == "Simferopol") & (pl.col("date") > last_dt_crimea)
 
-    # Crimean records
-    date_col = pl.col("date")
-    _last_dt_crimea = datetime(year=2014, month=3, day=24)
-    crimea_cond = (pl.col("region") == "Simferopol")&(pl.col("date") > _last_dt_crimea)
-    date_col = pl.when(crimea_cond).then(pl.lit(_last_dt_crimea)).otherwise(date_col).alias("date")
-
-    df = df.with_columns(date_col)
+        date_col = pl.col("date")
+        date_col = (
+            pl.when(crimea_condition)
+            .then(pl.lit(last_dt_crimea))
+            .otherwise(date_col)
+            .alias("date")
+        )
+        return df.with_columns(date_col)
+    
+    df = drop_old_rec(df)
+    df = combine_crimean_upd(df)
 
     # Generate info logs if logger level is DEBUG
     enable_debug_logs(df, is_debug=DEBUG_MODE)
