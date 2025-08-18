@@ -165,12 +165,12 @@ def drop_nulls(df: pl.LazyFrame) -> pl.LazyFrame:
     enable_debug_logs(df, is_debug=DEBUG_MODE, name="Dropped rows full of nulls.")
 
     # Drop rows where any string values are missing
-    df = df.drop_nulls(subset=cs.alpha())
+    df = df.drop_nulls(subset=cs.string())
     # Generate info logs if logger level is DEBUG
     enable_debug_logs(df, is_debug=DEBUG_MODE, name="Dropped rows with any string values missing.")
 
     # Drop rows were both datetime columns contain nulls
-    df = df.filter((pl.col("insertdate").is_not_null() & pl.col("theftdate").is_not_null()))
+    df = df.filter(~(pl.col("insertdate").is_null() & pl.col("theftdate").is_null()))
     # Generate info logs if logger level is DEBUG
     enable_debug_logs(df, is_debug=DEBUG_MODE, name="Dropped rows with both datetime values missing.")
 
