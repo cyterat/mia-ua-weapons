@@ -108,15 +108,22 @@ def drop_nulls(df: pl.LazyFrame) -> pl.LazyFrame:
                     # SCRIPT SPLIT HERE
 ###############################################################
 
-def enable_debug_logs(df: pl.LazyFrame, is_debug: bool = DEBUG_MODE) -> None:
-    """Materialize and compute data info only if logger level is DEBUG.
+def enable_debug_logs(
+        df: pl.LazyFrame,
+        is_debug: bool = DEBUG_MODE
+    ) -> None:
+    """This function is used to display detailed information about dataset
+    that the function outside currently uses.
+    
+    It materializes LazyFrame and computes info only if logger level is DEBUG, 
+    which is represented by 'is_debug' parameter.
+
+    Warning: It is computationaly heavy and should be used with caution. 
 
     Args:
         df (pl.LazyFrame): Query plan (LazyFrame) to use for dataset info extraction.
-        is_debug (bool, optional): Boolean representing whether logger level is set to debug. Defaults to DEBUG_MODE.
-
-    Returns:
-        _type_: _description_
+        is_debug (bool, optional): Boolean representing whether logger level is set to debug.
+            Defaults to DEBUG_MODE.
     """
     if is_debug:
         # Get number of rows in a LazyFrame
