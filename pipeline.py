@@ -23,27 +23,18 @@ def import_json() -> pl.LazyFrame:
     Returns:
         pl.LazyFrame: query plan (LazyFrame).
     """
+    df = pl.read_json(FILE_PATH)
 
-    try:
-        df = pl.read_json(FILE_PATH)
+    # Materialize and compute data info only if logger level is DEBUG
+    if logger.isEnabledFor(logging.DEBUG):
+        logger.debug(f"Rows: {df.height:,}")
+        logger.debug(f"Columns: {df.width}")
+        logger.debug(f"Estimated Size: {df.estimated_size('mb'):.0f} MB")
+        logger.debug(f"Schema: {df.collect_schema()}")
+        logger.debug(f"Nulls: {df.null_count().unpivot(variable_name='column',value_name='total_nulls').select(['column', 'total_nulls']).rows()}")
+        logger.debug(f"Sample: {df.select(['weaponkind', 'organunit', 'reasonsearch', 'insertdate', 'theftdate']).head(1)}")
 
-        # Materialize and compute data info only if logger level is DEBUG
-        if logger.isEnabledFor(logging.DEBUG):
-            logger.debug(f"Rows: {df.height:,}")
-            logger.debug(f"Columns: {df.width}")
-            logger.debug(f"Estimated Size: {df.estimated_size('mb'):.0f} MB")
-            logger.debug(f"Schema: {df.collect_schema()}")
-            logger.debug(f"Nulls: {df.null_count().unpivot(variable_name='column',value_name='total_nulls').select(['column', 'total_nulls']).rows()}")
-            logger.debug(f"Sample: {df.select(['weaponkind', 'organunit', 'reasonsearch', 'insertdate', 'theftdate']).head(1)}")
-
-        return df.lazy()
-
-    except FileNotFoundError:
-        logger.error(f"JSON artifact not found at {FILE_PATH}")
-        sys.exit(1)
-    except Exception as e:
-        logger.error(f"Unexpected error in import_json: {e.__class__.__name__}: {e}")
-        sys.exit(1)
+    return df.lazy()
 
 
 def drop_duplicates(df: pl.LazyFrame) -> pl.LazyFrame:
@@ -55,89 +46,60 @@ def drop_duplicates(df: pl.LazyFrame) -> pl.LazyFrame:
     Returns:
         pl.LazyFrame: Query plan (LazyFrame).
     """
-    try:
-        df = df.unique(maintain_order=False, keep="any")
+    df = df.unique(maintain_order=False, keep="any")
 
-        # Materialize and compute data info only if logger level is DEBUG
-        if logger.isEnabledFor(logging.DEBUG):
-            logger.debug(f"Rows: {df.select(pl.len()).collect().item():,}")
+    # Materialize and compute data info only if logger level is DEBUG
+    if logger.isEnabledFor(logging.DEBUG):
+        logger.debug(f"Rows: {df.select(pl.len()).collect().item():,}")
 
-        return df
-
-    except Exception as e:
-        logger.error(f"Unexpected error in drop_duplicates: {e.__class__.__name__}: {e}")
-        sys.exit(1)
+    return df
 
 
 def select_columns(df: pl.LazyFrame) -> pl.LazyFrame:
 
-    try:
-        columns = ["weaponkind","organunit","reasonsearch","insertdate","theftdate"]  # Could be from config
-        return df.select(columns)
-
-    except pl.ColumnNotFoundError as e:
-        logger.error(f"Required column missing: {e}")
-        sys.exit(1)
-    except Exception as e:
-        logger.error(f"Unexpected error in select_columns: {e}")
-        sys.exit(1)
+    columns = ["weaponkind","organunit","reasonsearch","insertdate","theftdate"]
+    return df.select(columns)
 
 
 def cast_dtypes(df: pl.LazyFrame) -> pl.LazyFrame:
 
-    try:
-        df = df.with_columns(
-            pl.col("weaponkind").cast(pl.String),
-            pl.col("organunit").cast(pl.String),
-            pl.col("reasonsearch").cast(pl.String),
-            pl.col("insertdate").str.strptime(pl.Datetime("us"), "%Y-%m-%dT%H:%M:%S"),
-            pl.col("theftdate").str.strptime(pl.Datetime("us"), "%Y-%m-%dT%H:%M:%S")
-        )
+    df = df.with_columns(
+        pl.col("weaponkind").cast(pl.String),
+        pl.col("organunit").cast(pl.String),
+        pl.col("reasonsearch").cast(pl.String),
+        pl.col("insertdate").str.strptime(pl.Datetime("us"), "%Y-%m-%dT%H:%M:%S"),
+        pl.col("theftdate").str.strptime(pl.Datetime("us"), "%Y-%m-%dT%H:%M:%S")
+    )
 
-        # Materialize and compute data info only if logger level is DEBUG
-        if logger.isEnabledFor(logging.DEBUG):
-            logger.debug(f"Rows: {df.select(pl.len()).collect().item():,}")
-            logger.debug(f"Schema: {df.collect_schema()}")
+    # Materialize and compute data info only if logger level is DEBUG
+    if logger.isEnabledFor(logging.DEBUG):
+        logger.debug(f"Rows: {df.select(pl.len()).collect().item():,}")
+        logger.debug(f"Schema: {df.collect_schema()}")
 
-        return df
-
-    except pl.ComputeError as e:
-        logger.error(f"Type casting failed: {e}")
-        sys.exit(1)
-    except Exception as e:
-        logger.error(f"Unexpected error in cast_dtypes: {e}")
-        sys.exit(1)
+    return df
 
 
 def drop_nulls(df: pl.LazyFrame) -> pl.LazyFrame:
 
-    try:
-        # Drop rows consisting of nulls only
-        df = df.filter(~pl.all_horizontal(pl.all().is_null()))
-        # Materialize and compute data info only if logger level is DEBUG
-        if logger.isEnabledFor(logging.DEBUG):
-            logger.debug(f"Rows after removal of records full of nulls: {df.select(pl.len()).collect().item():,}")
+    # Drop rows consisting of nulls only
+    df = df.filter(~pl.all_horizontal(pl.all().is_null()))
+    # Materialize and compute data info only if logger level is DEBUG
+    if logger.isEnabledFor(logging.DEBUG):
+        logger.debug(f"Rows after removal of records full of nulls: {df.select(pl.len()).collect().item():,}")
 
-        # Drop rows where any string values are missing
-        df = df.drop_nulls(subset=cs.alpha())
-        # Materialize and compute data info only if logger level is DEBUG
-        if logger.isEnabledFor(logging.DEBUG):
-            logger.debug(f"Rows after removal of records with missing string values: {df.select(pl.len()).collect().item():,}")
+    # Drop rows where any string values are missing
+    df = df.drop_nulls(subset=cs.alpha())
+    # Materialize and compute data info only if logger level is DEBUG
+    if logger.isEnabledFor(logging.DEBUG):
+        logger.debug(f"Rows after removal of records with missing string values: {df.select(pl.len()).collect().item():,}")
 
-        # Drop rows were both datetime columns contain nulls
-        df = df.filter((pl.col("insertdate").is_not_null() & pl.col("theftdate").is_not_null()))
-        # Materialize and compute data info only if logger level is DEBUG
-        if logger.isEnabledFor(logging.DEBUG):
-            logger.debug(f"Rows after removal of records with both datetime values missing: {df.select(pl.len()).collect().item():,}")
+    # Drop rows were both datetime columns contain nulls
+    df = df.filter((pl.col("insertdate").is_not_null() & pl.col("theftdate").is_not_null()))
+    # Materialize and compute data info only if logger level is DEBUG
+    if logger.isEnabledFor(logging.DEBUG):
+        logger.debug(f"Rows after removal of records with both datetime values missing: {df.select(pl.len()).collect().item():,}")
 
-        return df
-    
-    except pl.ColumnNotFoundError as e:
-        logger.error(f"Required column missing: {e}")
-        sys.exit(1)
-    except Exception as e:
-        logger.error(f"Unexpected error in drop_nulls: {e}")
-        sys.exit(1)
+    return df
 
 
 ###############################################################
@@ -153,32 +115,21 @@ def transform_column_reasonsearch(df: pl.LazyFrame) -> pl.LazyFrame:
     Returns:
         pl.DataFrame: Query plan (LazyFrame).
     """
-    try:
-        # Replace/translate report types to English
-        df = df.with_columns(
-            pl.col("reasonsearch").str.replace_many({"ВИКРАДЕННЯ":"Theft", "ВТРАТА":"Loss"})
-            .alias("reasonsearch")
-        )
+    # Replace/translate report types to English
+    df = df.with_columns(
+        pl.col("reasonsearch").str.replace_many({"ВИКРАДЕННЯ":"Theft", "ВТРАТА":"Loss"})
+        .alias("reasonsearch")
+    )
 
-        df = df.rename({"reasonsearch":"report"})
+    df = df.rename({"reasonsearch":"report"})
 
-        # Materialize and compute data info only if logger level is DEBUG
-        if logger.isEnabledFor(logging.DEBUG):
-            logger.debug(f"Rows: {df.select(pl.len()).collect().item():,}")
-            logger.debug(f"Schema: {df.collect_schema()}")
-            logger.debug(f"Sample: {df.head(1).collect()}")
+    # Materialize and compute data info only if logger level is DEBUG
+    if logger.isEnabledFor(logging.DEBUG):
+        logger.debug(f"Rows: {df.select(pl.len()).collect().item():,}")
+        logger.debug(f"Schema: {df.collect_schema()}")
+        logger.debug(f"Sample: {df.head(1).collect()}")
 
-        return df
-    
-    except pl.ColumnNotFoundError as e:
-        logger.error(f"Required column missing: {e}")
-        sys.exit(1)
-    except pl.ShapeError as e:
-        logger.error(f"Replacement patterns and replacement values provided to replace_many() do not match in length: {e}")
-        sys.exit(1)
-    except Exception as e:
-        logger.error(f"Unexpected error in transform_column_reasonsearch: {e}")
-        sys.exit(1)
+    return df
 
 
 def transform_column_region(df: pl.LazyFrame) -> pl.LazyFrame:
@@ -247,36 +198,31 @@ def transform_column_region(df: pl.LazyFrame) -> pl.LazyFrame:
         "Donetsk": r"(?i)\bДОНЕЦ\w{0,6}\b",
     }
 
-    try:
-        # Preserve original column
-        region_col = pl.col("organunit")
-        
-        # Apply first dictionary
-        for name, regex in regex_oblasts.items():
-            region_col = pl.when(
-                pl.col("organunit").str.contains(regex)
-            ).then(pl.lit(name)).otherwise(region_col)
-        
-        # Apply second dictionary (adjustments)
-        for name, regex in regex_acenters.items():
-            region_col = pl.when(
-                pl.col("organunit").str.contains(regex)
-            ).then(pl.lit(name)).otherwise(region_col)
-        
-        # Store combined nested expression tree in a new column
-        df = df.with_columns(region_col.alias("region")).drop("organunit")
+    # Preserve original column
+    region_col = pl.col("organunit")
+    
+    # Apply first dictionary
+    for name, regex in regex_oblasts.items():
+        region_col = pl.when(
+            pl.col("organunit").str.contains(regex)
+        ).then(pl.lit(name)).otherwise(region_col)
+    
+    # Apply second dictionary (adjustments)
+    for name, regex in regex_acenters.items():
+        region_col = pl.when(
+            pl.col("organunit").str.contains(regex)
+        ).then(pl.lit(name)).otherwise(region_col)
+    
+    # Store combined nested expression tree in a new column
+    df = df.with_columns(region_col.alias("region")).drop("organunit")
 
-        # Materialize and compute data info only if logger level is DEBUG
-        if logger.isEnabledFor(logging.DEBUG):
-            logger.debug(f"Rows: {df.select(pl.len()).collect().item():,}")
-            logger.debug(f"Schema: {df.collect_schema()}")
-            logger.debug(f"Sample: {df.head(1).collect()}")
+    # Materialize and compute data info only if logger level is DEBUG
+    if logger.isEnabledFor(logging.DEBUG):
+        logger.debug(f"Rows: {df.select(pl.len()).collect().item():,}")
+        logger.debug(f"Schema: {df.collect_schema()}")
+        logger.debug(f"Sample: {df.head(1).collect()}")
 
-        return df
-
-    except Exception as e:
-        logger.error(f"Region mapping failed: {e}")
-        sys.exit(1)
+    return df
 
 
 def transform_column_weaponcategory(df: pl.LazyFrame) -> tuple[pl.LazyFrame, pl.LazyFrame]:
@@ -409,38 +355,17 @@ def transform_column_weaponcategory(df: pl.LazyFrame) -> tuple[pl.LazyFrame, pl.
         schema={"Other":pl.String}
     )
 
-    try:
-        # Concatenate LazyFrames into a single one
-        wps_df = pl.concat(
-            [bladed, handguns, lfirearms, hfirearms, pneaumaticflob, artillery, explosives, other],
-            how="horizontal"
-        )
-    except pl.ShapeError as e:
-        logger.error(f"Concatenation failed. Shape mismatch: {e}")
-        sys.exit(1)
-    except Exception as e:
-        logger.error(f"Failed to concatenate LazyFrames: {e}")
-        sys.exit(1)
+    # Concatenate LazyFrames into a single one
+    wps_df = pl.concat(
+        [bladed, handguns, lfirearms, hfirearms, pneaumaticflob, artillery, explosives, other],
+        how="horizontal"
+    )
+    
+    # Unpivot LazyFrame (columns to rows)
+    wps_df = wps_df.unpivot(variable_name="weaponcategory", value_name="weaponkind").drop_nulls()
 
-    try:
-        # Unpivot LazyFrame (columns to rows)
-        wps_df = wps_df.unpivot(variable_name="weaponcategory", value_name="weaponkind").drop_nulls()
-    except pl.ColumnNotFoundError as e:
-        logger.error(f"Unpivot failed. Key column missing: {e}")
-        sys.exit(1)
-    except Exception as e:
-        logger.error(f"Failed to unpivot LazyFrame: {e}")
-        sys.exit(1)
-
-    try:
-        # Join weapon names with matching weapon categories 
-        df = df.join(other=wps_df, on="weaponkind", how="left")
-    except pl.ColumnNotFoundError as e:
-        logger.error(f"Join failed. Key column missing: {e}")
-        sys.exit(1)
-    except Exception as e:
-        logger.error(f"Failed to join weapon names with matching weapon categories: {e}")
-        sys.exit(1)
+    # Join weapon names with matching weapon categories 
+    df = df.join(other=wps_df, on="weaponkind", how="left")
 
     # Materialize and compute data info only if logger level is DEBUG
     if logger.isEnabledFor(logging.DEBUG):
@@ -529,31 +454,18 @@ def transform_column_date(df: pl.LazyFrame) -> pl.LazyFrame:
     df = df.drop("insertdate","theftdate")
 
     # Excluding Ukrainian SSR records from DataFrame
-    try:
-        _dt_independence = datetime(year=1991, month=8, day=24)
-        df = df.filter(pl.col("date") >= _dt_independence).sort(by="date", descending=False)
-        logger.debug(f"Rows: {df.select(pl.len()).collect().item():,}")
-        logger.debug(f"Schema: {df.collect_schema()}")
-
-    except Exception as e:
-        logger.error(f"Failed while excluding pre-independence records: {e}")
-        sys.exit(1)
+    _dt_independence = datetime(year=1991, month=8, day=24)
+    df = df.filter(pl.col("date") >= _dt_independence).sort(by="date", descending=False)
+    logger.debug(f"Rows: {df.select(pl.len()).collect().item():,}")
+    logger.debug(f"Schema: {df.collect_schema()}")
 
     # Crimean records
-    try:
-        date_col = pl.col("date")
+    date_col = pl.col("date")
+    _last_dt_crimea = datetime(year=2014, month=3, day=24)
+    crimea_cond = (pl.col("region") == "Simferopol")&(pl.col("date") > _last_dt_crimea)
+    date_col = pl.when(crimea_cond).then(pl.lit(_last_dt_crimea)).otherwise(date_col).alias("date")
 
-        _last_dt_crimea = datetime(year=2014, month=3, day=24)
-        crimea_cond = (pl.col("region") == "Simferopol")&(pl.col("date") > _last_dt_crimea)
-
-        date_col = pl.when(crimea_cond).then(pl.lit(_last_dt_crimea)).otherwise(date_col).alias("date")
-
-        df = df.with_columns(date_col)
-
-    except Exception as e:
-        logger.error(f"Failed while substituting post-2014 Crimea dates: {e}")
-        sys.exit(1)
-
+    df = df.with_columns(date_col)
 
     # Materialize and compute data info only if logger level is DEBUG
     if logger.isEnabledFor(logging.DEBUG):
@@ -665,4 +577,4 @@ if __name__ == "__main__":
         logger.critical(f"Pipeline run has failed. {e.__class__.__name__}: {e}")
         sys.exit(1)
 
-    print(pd.read_parquet("ua-mia-weapons.parquet.gzip").head())
+    print(pd.read_parquet(OUTPUT_PATH).head())
