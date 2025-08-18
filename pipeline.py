@@ -9,11 +9,12 @@ import polars.selectors as cs
 import numpy as np
 
 # Set up logging
-logging.basicConfig(level=logging.DEBUG, format='%(asctime)s - %(levelname)s - %(message)s')
+logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 logger = logging.getLogger(__name__)
 
 # CURRENT_DATE = datetime.now()
 FILE_PATH = os.path.join("assets","weapons-wanted.json")
+OUTPUT_PATH = os.path.join("assets","ua-mia-weapons.parquet.gzip")
 
 
 def import_json() -> pl.LazyFrame:
@@ -530,7 +531,6 @@ def transform_column_date(df: pl.LazyFrame) -> pl.LazyFrame:
     # Excluding Ukrainian SSR records from DataFrame
     try:
         _dt_independence = datetime(year=1991, month=8, day=24)
-        print(_dt_independence)
         df = df.filter(pl.col("date") >= _dt_independence).sort(by="date", descending=False)
         logger.debug(f"Rows: {df.select(pl.len()).collect().item():,}")
         logger.debug(f"Schema: {df.collect_schema()}")
@@ -577,35 +577,33 @@ def transform_column_date(df: pl.LazyFrame) -> pl.LazyFrame:
                     # SCRIPT SPLIT HERE
 ###############################################################
 
-def export_data(df):
-    print("\n7/7 Export data...")
+def sort_columns (df: pl.LazyFrame) -> pl.LazyFrame:
 
-    assert df.shape[0] != 0, "\n❗️ Dataframe is empty"
+    df = df.match_to_schema({
+        "report": pl.String,
+        "region": pl.String, 
+        "weaponcategory": pl.String, 
+        "date": pl.Datetime("us")
+    })
+    df = df.sort(by=["date", "region"], descending=False)
+    
+    return df
 
-    # Rearranging and sorting columns
-    end_df = (
-        df.loc[:, ["date", "region", "report", "weaponcategory"]]
-        .sort_values(by=["date", "region"])
-        .reset_index(drop=True)
-        .copy()
+
+def export_data(df: pl.LazyFrame, output_path: str) -> None:
+    """Exports data to gzip compressed parquet file.
+
+    Args:
+        df (pl.LazyFrame): Sorted and reordered LazyFrame.
+        output_path: File path to which the data should be wrtitten.
+    """
+
+    df.sink_parquet(
+        path=output_path,
+        compression="gzip"
     )
-
-    print("\n...")
-    print(end_df.head(1))
-    print("...\n")
-
-    print(f"Rows --> {end_df.shape[0]:,}")
-    print(f"Columns --> {end_df.shape[1]}")
-    print(f"Memory usage --> {int(end_df.memory_usage(deep=True).sum()/1000000)} MB")
-    print(f"\nMissing values:\n{end_df.isna().sum() + end_df[end_df == ''].count()}")
-
-    end_df.to_parquet(
-        "assets/ua-mia-weapons.parquet.gzip",
-        engine="pyarrow",
-        compression="gzip",
-        index=False,
-    )
-
+    logger.info(f"Exported data to {None}.")
+    return None
 
 if __name__ == "__main__":
     # (
@@ -655,15 +653,16 @@ if __name__ == "__main__":
                     # SCRIPT SPLIT HERE
 ###############################################################
         
-        try:
-            # df.export_to_parquet_gzip
-            logger.info(f"Exported data to {None}.")
-        except Exception as e:
-            logger.error(f"Failed to export data: {e}")
+        logger.info("1/2 Sort columns...")
+        df = sort_columns(df)
+
+        logger.info("2/2 Export data...")
+        export_data(df, OUTPUT_PATH)
 
         logger.info("Pipeline run was successful.")
 
     except Exception as e:
-        logger.critical(f"Pipeline run has failed. Unexpected error in: {e.__class__.__name__}: {e}")
+        logger.critical(f"Pipeline run has failed. {e.__class__.__name__}: {e}")
+        sys.exit(1)
 
-
+    print(pd.read_parquet("ua-mia-weapons.parquet.gzip").head())
