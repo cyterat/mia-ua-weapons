@@ -388,7 +388,7 @@ def check_new_weapons(df: pl.LazyFrame, wps_df: pl.LazyFrame) -> pl.LazyFrame:
                 new_weapons.add(w)
                 count += 1
 
-        logger.warning(f"{count} records of {len(new_weapons)} new weapons present: {str(new_weapons)[1:-1]}.\nUpdate 'wps_df' with new weapons!")
+        logger.warning(f"{count} records of {len(new_weapons)} new weapons present: {str(new_weapons)[1:-1]}.\nUpdate weapon_mappings in config.yaml with new weapons!")
     else:
         logger.info("No records with new weapons found.")
 
@@ -499,7 +499,7 @@ def export_data(df: pl.LazyFrame, output_path: str) -> None:
     # Write data to compressed parquet file
     df.sink_parquet(
         path=output_path,
-        compression="gzip"
+        compression=config["settings"]["parquet_compression"]
     )
     logger.info(f"Exported data to {output_path}.")
 
