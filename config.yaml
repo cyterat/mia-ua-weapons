@@ -1,11 +1,10 @@
 settings:
-  log_level: "DEBUG"
-  parquet_compression: "gzip"
+  log_level: "DEBUG" # DEBUG, INFO, WARNING, ERROR, CRITICAL
+  parquet_compression: "gzip" # lz4, uncompressed, snappy, gzip, lzo, brotli, zstd
 
 files:
   input_dir: "assets"
   input_file: "weapons-wanted.json"
-  
   output_dir: "assets"
   output_file: "ua-mia-weapons.parquet.gzip"
 
