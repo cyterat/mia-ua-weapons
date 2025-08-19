@@ -1,5 +1,6 @@
 import os
 import sys
+import yaml
 import logging
 from datetime import datetime
 
@@ -7,13 +8,29 @@ import polars as pl
 import polars.selectors as cs
 
 
-# Set up logging
-logging.basicConfig(level=logging.DEBUG, format='%(asctime)s - %(levelname)s - %(message)s')
-logger = logging.getLogger(__name__)
+def load_config() -> dict:
+    """Load configurations from YAML file."""
+    config_path = os.path.join("config.yaml")
+    with open(config_path, 'r', encoding='utf-8') as f:
+        return yaml.safe_load(f)
+    
+config = load_config()
 
+# Set up logging
+log_level = getattr(logging, config["settings"]["log_level"])
+logging.basicConfig(level=log_level, format='%(asctime)s - %(levelname)s - %(message)s', filename='debug.log', encoding='utf-8')
+
+logger = logging.getLogger(__name__)
 DEBUG_MODE = logger.isEnabledFor(logging.DEBUG)
-INPUT_PATH = os.path.join("assets","weapons-wanted.json")
-OUTPUT_PATH = os.path.join("assets","ua-mia-weapons.parquet.gzip")
+
+INPUT_PATH = os.path.join(
+    config["files"]["input_dir"],
+    config["files"]["input_file"]
+)
+OUTPUT_PATH = os.path.join(
+    config["files"]["output_dir"],
+    config["files"]["output_file"]
+)
 
 
 def enable_debug_logs(
@@ -231,7 +248,7 @@ def transform_column_reasonsearch(df: pl.LazyFrame) -> pl.LazyFrame:
     return df
 
 
-def transform_column_region(df: pl.LazyFrame) -> pl.LazyFrame:
+def transform_column_organunit(df: pl.LazyFrame) -> pl.LazyFrame:
     """Replaces long MIA unit names with region names using regex. Creates column 'region'.
 
     Args:
@@ -241,62 +258,10 @@ def transform_column_region(df: pl.LazyFrame) -> pl.LazyFrame:
         pl.LazyFrame: Query plan (LazyFrame).
     """
 
-    # Dictionary with oblasts names (keys) and their respective regular expressions (values)
-    regex_oblasts = {
-        "Uzhhorod": r"(?i)\bЗАКАРПАТ\w{0,6}.{1,5}\bобл",
-        "Lviv": r"(?i)\bЛЬВ[іо]ВС\w{0,1}К\w{0,6}.{1,5}\bобл",
-        "Ivano-Frankivsk": r"(?i)\b[іи]В\w{0,3}[.\-]ФР\w{0,10}.{1,5}\bобл",
-        "Chernivtsi": r"(?i)\bЧЕРН[іо]В\w{0,1}Ц\w{0,6}.{1,5}\bобл",
-        "Ternopil": r"(?i)\bТЕРНОП[іо]ЛЬС\w{0,6}.{1,5}\bобл",
-        "Lutsk": r"(?i)\bВОЛ\w{1,2}Н\w{0,6}.{1,5}\bобл",
-        "Rivne": r"(?i)\bР[іо]ВНЕНС\w{0,6}.{1,5}\bобл",
-        "Zhytomyr": r"(?i)\bЖИТОМИРС\w{0,6}.{1,5}\bобл",
-        "Khmelnytskyi": r"(?i)\bХМЕЛЬНИЦ\w{0,6}.{1,5}\bобл",
-        "Vinnytsia": r"(?i)\bВ[іи]ННИЦ\w{0,6}.{1,5}\bобл",
-        "Kyiv": r"(?i)\bКИ[їе]В\w{0,6}.{1,5}\bобл",
-        "Cherkasy": r"(?i)\bЧЕРКАC\w{0,6}.{1,5}\bобл",
-        "Kropyvnytskyi": r"(?i)\bК[іи]РОВОГРАДС\w{0,6}.{1,5}\bобл",
-        "Odesa": r"(?i)\bОДЕС\w{0,6}.{1,5}\bобл",
-        "Mykolaiv": r"(?i)\b[мн]ИКОЛА[їеє]ВС\w{0,6}.{1,5}\bобл",
-        "Kherson": r"(?i)\bХЕРСОНС\w{0,6}.{1,5}\bобл",
-        "Simferopol": r"(?i)\bКР\w{1,2}М\b|\bСЕВАСТ\w{0,1}ПОЛ\w{1,10}\b|\bЯЛТ\w{1,10}|\bАР\b|\bС[іи]МФЕРОПОЛ\w{1,10}\b",
-        "Zaporizhzhia": r"(?i)\bЗАПОР[іо]\w{0,6}.{1,5}\bобл",
-        "Dnipro": r"(?i)\bДН[іе]ПРОПЕТРОВС\w{0,6}.{1,5}\bобл",
-        "Poltava": r"(?i)\bПОЛТАВС\w{0,6}.{1,5}\bобл",
-        "Chernihiv": r"(?i)\bЧЕРН[іи]Г[іо]В\w{0,6}.{1,5}\bобл",
-        "Sumy": r"(?i)\bСУМ\w{0,6}.{1,5}\bобл",
-        "Kharkiv": r"(?i)\bХАР\w{0,1}К[іо]В\w{0,6}.{1,5}\bобл",
-        "Luhansk": r"(?i)\bЛУГАНС\w{0,6}.{1,5}\bобл",
-        "Donetsk": r"(?i)\bДОНЕЦ\w{0,6}.{1,5}\bобл",
-    }
-    # Dictionary with administrative centers' names (keys) and their respective regular expressions (values)
-    regex_acenters = {
-        "Uzhhorod": r"(?i)\bУЖГОРОД\w{0,6}\b",
-        "Lviv": r"(?i)\bЛЬВ[іо]В\w{0,6}\b",
-        "Ivano-Frankivsk": r"(?i)\b[іи]В\w{0,3}[.\-]ФРАНК\w{0,3}ВС\w{0,6}\b",
-        "Chernivtsi": r"(?i)\bЧЕРН[іо]В\w{0,1}Ц\w{0,6}\b",
-        "Ternopil": r"(?i)\bТЕРНОП[іо]ЛЬ\w{0,6}\b",
-        "Lutsk": r"(?i)\bВОЛ\w{1,2}Н\w{0,6}\b|\bЛУЦ\w{0,1}К\w{0,6}\b",
-        "Rivne": r"(?i)\bР[іо]ВН[ео]\w{0,6}\b|\bГОЩАНС\w{0,5}\b",
-        "Zhytomyr": r"(?i)\bЖИТОМИР\w{0,6}\b",
-        "Khmelnytskyi": r"(?i)\bХМЕЛЬНИЦ\w{0,6}\b",
-        "Vinnytsia": r"(?i)\bВ[іи]ННИЦ\w{0,6}\b",
-        "Kyiv": r"(?i)\bКИ[їеє]В\w{0,6}\b|\bПЕЧЕРСЬК\w{0,6}\b|\bГОЛОСІЇВ\w{0,6}\b",
-        "Cherkasy": r"(?i)\bЧЕРКАС\w{0,6}\b",
-        "Kropyvnytskyi": r"(?i)\bК[іи]РОВОГРАД\w{0,6}\b|\bКРОПИВНИЦ\w{0,6}\b",
-        "Odesa": r"(?i)\bОДЕС\w{0,6}\b",
-        "Mykolaiv": r"(?i)\b[мн]ИКОЛА[їеє]В\w{0,6}\b",
-        "Kherson": r"(?i)\bХЕРСОН\w{0,6}\b",
-        "Simferopol": r"(?i)\bКР\w{1,2}М\b|\bСЕВАСТ\w{0,1}ПОЛ\w{1,10}\b|\bЯЛТ\w{1,10}|\bАР\b|\bС[іи]МФЕРОПОЛ\w{1,10}\b",
-        "Zaporizhzhia": r"(?i)\bЗАПОР[іо]\w{0,6}\b",
-        "Dnipro": r"(?i)\bДН[іе]ПР\w{0,10}\b|\bДН[іе]ПРОПЕТРОВС\w{0,6}\b|\bКРИВ\w{0,3}\W{0,5}Р\w{1,6}\b",
-        "Poltava": r"(?i)\bПОЛТАВ\w{0,6}\b",
-        "Chernihiv": r"(?i)\bЧЕРН[іи]Г[іо]В\w{0,6}\b|\bН[іе]ЖИН\w{0,6}\b|\bБАХМА\w{0,6}\b",
-        "Sumy": r"(?i)\bСУМ\w{0,6}\b|\bЛЮБОТ\w{1,6}\b",
-        "Kharkiv": r"(?i)\bХАР\w{0,1}К[іо]В\w{0,6}\b|\bЛОЗОВ\w{0,6}\b|\bОСНОВ\w{0,6}\b",
-        "Luhansk": r"(?i)\bЛУГАНС\w{0,6}\b",
-        "Donetsk": r"(?i)\bДОНЕЦ\w{0,6}\b",
-    }
+    # [FIX] Dictionary with oblasts names (keys) and their respective regular expressions (values)
+    regex_oblasts = config["regex_mappings"]["oblasts"]
+    # [FIX] Dictionary with administrative centers' names (keys) and their respective regular expressions (values)
+    regex_acenters = config["regex_mappings"]["adjustments"]
 
     # Preserve original column
     region_col = pl.col("organunit")
@@ -314,15 +279,19 @@ def transform_column_region(df: pl.LazyFrame) -> pl.LazyFrame:
         ).then(pl.lit(name)).otherwise(region_col)
     
     # Store combined nested expression tree in a new column
-    df = df.with_columns(region_col.alias("region")).drop("organunit")
+    df = df.with_columns(region_col.alias("region"))
+    # Generate info logs if logger level is DEBUG
+    enable_debug_logs(df, is_debug=DEBUG_MODE, name="Added new region column.")
 
+    # Drop redundant column
+    df = df.drop("organunit")
     # Generate info logs if logger level is DEBUG
     enable_debug_logs(df, is_debug=DEBUG_MODE)
 
     return df
 
 
-def transform_column_weaponcategory(df: pl.LazyFrame) -> tuple[pl.LazyFrame, pl.LazyFrame]:
+def transform_column_weaponkind(df: pl.LazyFrame) -> tuple[pl.LazyFrame, pl.LazyFrame]:
     """Creates a new column with broader weapon categories. Creates column 'weaponcategory'.
 
     Args:
@@ -332,129 +301,43 @@ def transform_column_weaponcategory(df: pl.LazyFrame) -> tuple[pl.LazyFrame, pl.
         tuple[pl.LazyFrame, pl.LazyFrame]: Lazy query plans for data with original weapon names and additional weapon mappings.
     """
     
-    # Temporary Series objects below will be later used to populate a DataFrame
+    # [FIX] Temporary Series objects below will be later used to populate a DataFrame
     bladed = pl.LazyFrame(
-        data={"Bladed":[
-            "КИНДЖАЛ",
-            "КОРТИК",
-            "МЕЧ",
-            "НІЖ МИСЛИВСЬКИЙ",
-            "НІЖ",
-            "ШАБЛЯ",
-            "ШАШКА",
-            "ШТИК НІЖ",
-            "ШТИК",
-        ]},
+        data=config["weapon_mappings"]["bladed"],
         schema={"Bladed":pl.String}
     )
     handguns = pl.LazyFrame(
-        data={"Handguns":[
-            "ПІСТОЛЕТ ГАЗОВИЙ",
-            "ПІСТОЛЕТ КУЛЕМЕТ",
-            "ПІСТОЛЕТ МК",
-            "ПІСТОЛЕТ ПІД ГУМОВУ КУЛЮ",
-            "ПІСТОЛЕТ САМОРОБНИЙ",
-            "ПІСТОЛЕТ СИГНАЛЬНИЙ",
-            "ПІСТОЛЕТ СТАРТОВИЙ",
-            "ПІСТОЛЕТ",
-            "РЕВОЛЬВЕР ГАЗОВИЙ",
-            "РЕВОЛЬВЕР ГАЗОВОДРОБОВИЙ",
-            "РЕВОЛЬВЕР ПІД ГУМОВУ КУЛЮ",
-            "РЕВОЛЬВЕР СИГНАЛЬНИЙ",
-            "РЕВОЛЬВЕР СТАРТОВИЙ",
-            "РЕВОЛЬВЕР",
-            "ПІСТОЛЕТ АВТОРУЧКА",
-        ]},
+        data=config["weapon_mappings"]["handguns"],
         schema={"Handguns":pl.String}
     )
     lfirearms = pl.LazyFrame(
-        data={"Light firearms":[
-            "АВТОМАТ",
-            "ГВИНТІВКА МК",
-            "ГВИНТІВКА",
-            "КАРАБІН",
-            "ОБРІЗ ГВИНТІВКИ МК",
-            "ОБРІЗ ГВИНТІВКИ",
-            "ОБРІЗ КАРАБІНА",
-            "ОБРІЗ РУШНИЦІ",
-            "РУШНИЦЯ ЗБІРНА",
-            "РУШНИЦЯ МИСЛИВСЬКА",
-            "РУШНИЦЯ ПОМПОВА",
-            "РУШНИЦЯ",
-        ]},
+        data=config["weapon_mappings"]["lfirearms"],
         schema={"Light firearms":pl.String}
     )
     hfirearms = pl.LazyFrame(
-        data={"Heavy firearms":[
-            "ГАРМАТА АВТОМАТИЧНА",
-            "ГАРМАТА",
-            "КУЛЕМЕТ СТАНКОВИЙ",
-            "КУЛЕМЕТ",
-            "РУШНИЦЯ ПРОТИТАНКОВА",
-        ]},
+        data=config["weapon_mappings"]["hfirearms"],
         schema={"Heavy firearms":pl.String}
     )
-    pneaumaticflob = pl.LazyFrame(
-        data={"Pneumatic&Flobert":[
-            "ГВИНТІВКА ПНЕВМАТИЧНА",
-            "КАРАБІН ПІД ПАТРОН ФЛОБЕРА",
-            "ПІСТОЛЕТ ПІД ПАТРОН ФЛОБЕРА",
-            "ПІСТОЛЕТ ПНЕВМАТИЧНИЙ",
-            "РЕВОЛЬВЕР ПІД ПАТРОН ФЛОБЕРА",
-            "РЕВОЛЬВЕР ПНЕВМАТИЧНИЙ",
-        ]},
+    pneumaticflob = pl.LazyFrame(
+        data=config["weapon_mappings"]["pneumaticflob"],
         schema={"Pneumatic&Flobert":pl.String}
     )
     artillery = pl.LazyFrame(
-        data={"Artillery":[
-            "ГРАНАТОМЕТ",
-            "МІНОМЕТ",
-            "ПЗРК",
-            "ПТРК",
-            "РАКЕТНИЦЯ",
-            "ПУСКОВІ УСТАНОВКИ",
-            "ЗЕНІТНА УСТАНОВКА",
-        ]},
+        data=config["weapon_mappings"]["artillery"],
         schema={"Artillery":pl.String}
     )
     explosives = pl.LazyFrame(
-        data={"Explosives":[
-            "ВИБУХОВІ РЕЧОВИНИ",
-            "ГРАНАТА",
-            "РАКЕТА",
-            "СНАРЯД"
-        ]},
+        data=config["weapon_mappings"]["explosives"],
         schema={"Explosives":pl.String}
     )
     other = pl.LazyFrame(
-        data={"Other":[
-            "ДЕТАЛІ",
-            "ЗАПАЛ",
-            "ЗАТВОР ДЕТАЛЬ",
-            "ІНШІ ДЕТАЛІ ЗБРОЇ",
-            "МАГАЗИН ПІСТОЛЕТНИЙ",
-            "МАГАЗИН",
-            "НАБОЇ БОЄВІ",
-            "ПРИЦІЛ ОПТИЧНИЙ",
-            "РАМКА ДЕТАЛЬ",
-            "СТВОЛ ДЕТАЛЬ",
-            "СТВОЛЬНА КОРОБКА ДЕТАЛЬ",
-            "АРБАЛЕТ",
-            "РУШНИЦЯ ДЛЯ ПІДВОДНОГО ПОЛЮВАННЯ",
-            "АВТОМАТ УЧБОВИЙ",
-            "ГВИНТІВКА УЧБОВА",
-            "КАРАБІН УЧБОВИЙ",
-            "КУЛЕМЕТ УЧБОВИЙ",
-            "ПІСТОЛЕТ МОНТАЖНИЙ",
-            "ПІСТОЛЕТ УЧБОВИЙ",
-            "КИСТЕНЬ",
-        ]},
+        data=config["weapon_mappings"]["other"],
         schema={"Other":pl.String}
     )
 
     # Concatenate LazyFrames into a single one
     wps_df = pl.concat(
-        [bladed, handguns, lfirearms, hfirearms, pneaumaticflob, artillery, explosives, other],
+        [bladed, handguns, lfirearms, hfirearms, pneumaticflob, artillery, explosives, other],
         how="horizontal"
     )
     
@@ -505,8 +388,7 @@ def check_new_weapons(df: pl.LazyFrame, wps_df: pl.LazyFrame) -> pl.LazyFrame:
                 new_weapons.add(w)
                 count += 1
 
-        logger.warning(f"{count} records of {len(new_weapons)} new weapons present: {str(new_weapons)[1:-1]}.\
-                    \nUpdate 'wps_df' with new weapons!")
+        logger.warning(f"{count} records of {len(new_weapons)} new weapons present: {str(new_weapons)[1:-1]}.\nUpdate 'wps_df' with new weapons!")
     else:
         logger.info("No records with new weapons found.")
 
@@ -521,7 +403,7 @@ def check_new_weapons(df: pl.LazyFrame, wps_df: pl.LazyFrame) -> pl.LazyFrame:
     return df
     
 
-def transform_column_date(df: pl.LazyFrame) -> pl.LazyFrame:
+def transform_column_dates(df: pl.LazyFrame) -> pl.LazyFrame:
     """Creates a new date column using/replacing 'theftdate' and 'insertdate'.
     Removes and substitutes records preserving historical accuracy during post-independence period.
 
@@ -649,15 +531,15 @@ if __name__ == "__main__":
         logger.info("1/4 Transform 'reasonsearch' column...")
         df = transform_column_reasonsearch(df)
         
-        logger.info("2/4 Transform 'region' column...")
-        df = transform_column_region(df)
+        logger.info("2/4 Transform 'organunit' column...")
+        df = transform_column_organunit(df)
 
-        logger.info("3/4 Transform 'weaponcategory' column...")
-        df, wps_df = transform_column_weaponcategory(df)
+        logger.info("3/4 Transform 'weaponkind' column...")
+        df, wps_df = transform_column_weaponkind(df)
         df = check_new_weapons(df, wps_df)
 
-        logger.info("4/4 Transform 'date' column...")
-        df = transform_column_date(df)
+        logger.info("4/4 Transform date columns...")
+        df = transform_column_dates(df)
 
 ###############################################################
                     # SCRIPT SPLIT HERE
