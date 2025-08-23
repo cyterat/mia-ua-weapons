@@ -57,7 +57,7 @@ jobs:
           path: data/raw
 
       - name: run orchestrator script
-        run: pipeline/etl.py
+        run: python pipeline/etl.py
 
       - name: check repository size
         run: du -h -d 0
