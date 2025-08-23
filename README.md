@@ -1,6 +1,5 @@
 [![Python - 3.10.13](https://img.shields.io/badge/Python-3.10.13-f4d159)](https://www.python.org/downloads/release/python-31013/)
-[![Import Data](https://github.com/cyterat/mia-ua-weapons/actions/workflows/import.yml/badge.svg)](https://github.com/cyterat/mia-ua-weapons/actions/workflows/import.yml)
-[![Model data](https://github.com/cyterat/mia-ua-weapons/actions/workflows/model.yml/badge.svg?branch=master)](https://github.com/cyterat/mia-ua-weapons/actions/workflows/model.yml)
+[![Update Data](https://github.com/cyterat/mia-ua-weapons/actions/workflows/update.yml/badge.svg)](https://github.com/cyterat/mia-ua-weapons/actions/workflows/update.yml)
 
 # ⚔️Lost and Stolen Weapons in Ukraine  (1991-2023)
 
