@@ -43,7 +43,7 @@ def generate_reports_scatterplot(granularity):
         
     """
     # Data
-    date_report_total = pd.read_parquet('assets/models/date-report-total.parquet.gzip')
+    date_report_total = pd.read_parquet('data/marts/date-report-total.parquet').astype({"report":"str"})
     
     grouped_day = (
         date_report_total
@@ -75,7 +75,7 @@ def generate_reports_scatterplot(granularity):
         )
     
     # Current year 
-    current_yr = int(modification_date('assets/models/date-report-total.parquet.gzip','year'))
+    current_yr = int(modification_date('data/marts/date-report-total.parquet','year'))
 
     # Outlier condition (also used in annotation text, therefore not 0.0 but 0.00 format)
     threshold = 0.90
@@ -575,7 +575,7 @@ def generate_reports_scatterplot(granularity):
 def generate_weapons_scatterplot():
     
     # Data
-    model_region_weaponcategory_total = pd.read_parquet("assets/models/region-weaponcategory-total.parquet.gzip")
+    model_region_weaponcategory_total = pd.read_parquet("data/marts/region-weaponcategory-total.parquet").astype({"region":"str","weaponcategory":"str"})
 
     # Function to insert line breaks
     def insert_line_breaks(weaponcategory_name):

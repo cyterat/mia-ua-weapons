@@ -1,12 +1,15 @@
 settings:
-  log_level: "DEBUG" # DEBUG, INFO, WARNING, ERROR, CRITICAL
-  parquet_compression: "gzip" # lz4, uncompressed, snappy, gzip, lzo, brotli, zstd
+  log_level: "INFO" # DEBUG, INFO (default), WARNING, ERROR, CRITICAL
+  export_logs: False # True, False (default)
+  parquet_compression: "brotli" # lz4, uncompressed, snappy, gzip, lzo, brotli (default), zstd
 
 files:
-  input_dir: "assets"
-  input_file: "weapons-wanted.json"
-  output_dir: "assets"
-  output_file: "ua-mia-weapons.parquet.gzip"
+  raw_path: ["data","raw","weapons-wanted.json"]
+  processed_path: ["data","processed","ua-mia-weapons.parquet"]
+  etl_logs_path: ["pipeline", "config", "etl.log"]
+  materialize_logs_path: ["pipeline", "config", "materialize.log"]
+  models_dir: ["data", "models"]
+  marts_dir: ["data","marts"]
 
 regex_mappings:
   oblasts: 

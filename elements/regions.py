@@ -5,9 +5,9 @@ import pandas as pd
 import plotly.graph_objects as go
 
 # Data
-region_total = pd.read_parquet("assets/models/region-total.parquet.gzip")
-region_year_total = pd.read_parquet("assets/models/region-year-total.parquet.gzip")
-population = pd.read_csv("assets/ua-population.csv", usecols=["region", "2020", "2021"])
+region_total = pd.read_parquet("data/marts/region-total.parquet").astype({"region":"str"})
+region_year_total = pd.read_parquet("data/marts/region-year-total.parquet").astype({"region":"str"})
+population = pd.read_csv("data/raw/ua-population.csv", usecols=["region", "2020", "2021"])
 
 
 # File modification year
@@ -221,7 +221,7 @@ def generate_region_total_linechart(region):
 
 # Polar chart of weapon categories
 def generate_region_weapons_polarchart(region):
-    df = pd.read_parquet("assets/models/region-weaponcategory-total.parquet.gzip")
+    df = pd.read_parquet("data/marts/region-weaponcategory-total.parquet").astype({"region":"str","weaponcategory":"str"})
     
     df['rank'] = df.groupby('region')['total'].rank(method='dense', ascending=True).astype('int8')
     
@@ -308,7 +308,7 @@ def generate_region_weapons_polarchart(region):
 
 # Last 10 years trend of Theft and Loss cases in a region
 def generate_region_report_10y_linechart(region):
-    current_yr = int(modification_date('assets/models/region-total.parquet.gzip'))
+    current_yr = int(modification_date('data/marts/region-total.parquet'))
     
     df = region_year_total[
         (region_year_total['date'] >= str(current_yr - 10))
@@ -318,8 +318,8 @@ def generate_region_report_10y_linechart(region):
     theft_tr = df.loc[:, ['region', 'date', 'theft']]
     loss_tr = df.loc[:, ['region', 'date', 'loss']]
     
-    theft = df['theft'].sum()
-    loss = df['loss'].sum()
+    theft = region_year_total[region_year_total['region'] == str(region)]['theft'].sum()
+    loss = region_year_total[region_year_total['region'] == str(region)]['loss'].sum()
 
     htext = "%{y:,.0f}"
 
@@ -420,7 +420,7 @@ def generate_region_report_10y_linechart(region):
         title=(
             f"""
             <span style='font-size:14px; font-family:{font_main}; color:{clr_secondary_font}'>
-            10-year trend
+            last 10-years by report type
             </span>
             """
             )

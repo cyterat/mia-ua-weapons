@@ -8,12 +8,10 @@ from elements import generate_reports_piechart
 from elements import generate_weapons_scatterplot
 from elements import generate_region_total_table
 from elements import generate_weaponcategory_total_table
-
 from elements import generate_rank_region_population
 from elements import generate_region_total_linechart
 from elements import generate_region_weapons_polarchart
 from elements import generate_region_report_10y_linechart
-
 from utils import modification_date  
 from utils import current_total_records  
 
@@ -50,17 +48,17 @@ font_family = 'Montserrat, sans-serif'
 # ====================#
 # --------DATA--------#
 
-region_total = pd.read_parquet("assets/models/region-total.parquet.gzip")
+region_total = pd.read_parquet("data/marts/region-total.parquet").astype({"region":"str"})
 top = region_total.nlargest(5, "total")
 bot = region_total.nsmallest(5, "total")
 
-model_weaponcategory_total = pd.read_parquet("assets/models/weaponcategory-total.parquet.gzip").set_index('weaponcategory')
-model_region_year_total = pd.read_parquet("assets/models/region-year-total.parquet.gzip")
-date_report_total = pd.read_parquet("assets/models/date-report-total.parquet.gzip")
-# population = pd.read_csv("assets/ua-population.csv").iloc[:,[0,-2,-1]]
+model_weaponcategory_total = pd.read_parquet("data/marts/weaponcategory-total.parquet").astype({"weaponcategory":"str"}).set_index('weaponcategory')
+model_region_year_total = pd.read_parquet("data/marts/region-year-total.parquet").astype({"region":"str"})
+date_report_total = pd.read_parquet("data/marts/date-report-total.parquet").astype({"report":"str"})
+# population = pd.read_csv("data/raw/ua-population.csv").iloc[:,[0,-2,-1]]
 
 # File modification year
-current_date = modification_date("assets/models/region-total.parquet.gzip","date")
+current_date = modification_date("data/raw/weapons-wanted.json","date")
 
 
 # ====================#
@@ -295,7 +293,7 @@ with st.spinner("Please wait a few seconds while I prepare everything...🔥"):
     
     with sec4_col2:
         
-        year = st.selectbox(label='', options=np.arange(1991, int(modification_date("assets/models/region-total.parquet.gzip",'year'))+1, 1), label_visibility='hidden')
+        year = st.selectbox(label='', options=np.arange(1991, int(modification_date("data/raw/weapons-wanted.json",'year'))+1, 1), label_visibility='hidden')
     
         generate_reports_piechart(year)
         
