@@ -92,7 +92,7 @@ jobs:
       - name: install duckdb library
         run: |
           python -m pip install --upgrade pip
-          pip install duckdb
+          pip install duckdb pyyaml
       
       - name: execute python script
         run: python pipeline/etl/materialize.py
