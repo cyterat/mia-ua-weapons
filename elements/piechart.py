@@ -5,7 +5,7 @@ import plotly.graph_objects as go
 
 def generate_reports_piechart(year=2023):
     
-    tl_count = pd.read_parquet("assets/models/date-report-total.parquet.gzip").groupby([pd.Grouper(key='date', freq='Y'), 'report'])['total'].sum().reset_index()
+    tl_count = pd.read_parquet("data/marts/date-report-total.parquet").astype({"report":"str"}).groupby([pd.Grouper(key='date', freq='Y'), 'report'])['total'].sum().reset_index()
     tl_count = tl_count[tl_count['date'].dt.year==int(year)]
     
     clr_loss = '#679496'

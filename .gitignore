@@ -1,5 +1,6 @@
-/analysis
-/__pycache__
-/elements/__pycache__
-/utils/__pycache__
+__pycache__/
+.mypy_cache/
 assets/weapons-wanted.json
+TEST*
+app/
+weapons-wanted.json

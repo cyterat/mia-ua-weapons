@@ -8,7 +8,7 @@ import plotly.io as pio
 def generate_events_barchart():
     
     # Data
-    df = pd.read_parquet('assets/models/month-total.parquet.gzip')
+    df = pd.read_parquet('data/marts/month-total.parquet').astype({"date":"datetime64[ns]"})
     
     # Colors
     clr_tile_background = '#292929'
@@ -29,7 +29,7 @@ def generate_events_barchart():
     clr_secondary_font = '#8d9294'
     
     # Other
-    arrowline_xshift = '-28' # ensures arrow is approx. in the middle of the bar (basically adds 28 days)
+    arrowline_xshift = '-1' # ensures arrow is approx. in the middle of the bar (basically adds 28 days)
     
     # Outlier condition (also used in annotation text, therefore not 0.0 but 0.00 format)
     threshold = 0.90
@@ -42,7 +42,7 @@ def generate_events_barchart():
     #     ]
     
     # V2 Conditional bar color
-    cnd_event_list = pd.to_datetime(['1991-08', '1994-07', '1999-11', '2000-11', '2004-11', '2005-01', '2008-09', '2010-02', '2013-11', '2014-03', '2014-06', '2015-07', '2017-03', '2019-05', '2022-02']) + MonthEnd(0) 
+    cnd_event_list = pd.to_datetime(['1991-08', '1994-07', '1999-11', '2000-11', '2004-11', '2005-01', '2008-09', '2010-02', '2013-11', '2014-03', '2014-06', '2015-07', '2017-03', '2019-05', '2022-02'],format='%Y-%m') + MonthEnd(0) 
     
     cnd_clr = pd.Series(
         np.where(

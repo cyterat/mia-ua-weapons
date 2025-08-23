@@ -22,15 +22,17 @@
 
 - The jupyter notebook which was used during IDE and then transformed into a separate pipeline script can be found in my [notebooks repository](https://github.com/cyterat/notebooks)
 
-## 🚧 Version 1.1.0 (Latest)
+## 🚧Latest Changes
 
-The majority of changes were made to the data **import** and **modeling** workflows in the GitHub Actions.
-
-- **wget** has been added which enables to download the JSON file via HTTPS using custom headers;
-- JSON file is now stored as an artifact and used only within a workflow;
-- **Model Data** workflow will now run only when the **Import Data** finishes, or when triggered manually;
-- Data Flow/Models Relationship [diagram](assets/ua-mia-weapons-relationships.png) has been updated.
+Restructure pipeline for performance and maintainability
+- Split monolithic 400+ line pipeline into modular ETL structure
+- Replace pandas with polars for 4+ minute processing optimization
+- Separate data extraction/transformation from SQL-based analytical modeling
+- Create materialization layer with SQL templates and DuckDB execution replacing 30+ sec modeling process
+- Move from print() to proper logging with YAML configuration
+- Organize data into structured marts/models/raw/processed directories
+- Update CI workflows and app paths for new architecture
   
 ## 🛠 Libraries
 
-Pandas, NumPy, Matplotlib, Plotly, Streamlit
+Polars, DuckDB, Pandas, NumPy, Matplotlib, Plotly, Streamlit

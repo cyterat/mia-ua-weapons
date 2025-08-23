@@ -1,0 +1,62 @@
+2025-08-23 01:05:39,400 - INFO - Starting materialization of 7 models.
+2025-08-23 01:05:39,431 - DEBUG - Model date-report-total.sql: 21869 rows
+2025-08-23 01:05:40,038 - DEBUG - Preview:
+        date report  total
+0 1991-08-26  Theft      1
+1 1991-08-27   Loss      1
+2 1991-08-27  Theft     10
+3 1991-08-28  Theft      3
+4 1991-08-30   Loss      1
+2025-08-23 01:05:40,462 - INFO - Completed model: date-report-total.sql
+2025-08-23 01:05:40,477 - DEBUG - Model month-total.sql: 409 rows
+2025-08-23 01:05:40,508 - DEBUG - Preview:
+        date  total
+0 1991-08-01     22
+1 1991-09-01     26
+2 1991-10-01     25
+3 1991-11-01     31
+4 1991-12-01     37
+2025-08-23 01:05:40,524 - INFO - Completed model: month-total.sql
+2025-08-23 01:05:40,540 - DEBUG - Model region-total.sql: 25 rows
+2025-08-23 01:05:40,571 - DEBUG - Preview:
+       region   total    loss  theft  total_pct  loss_pct  theft_pct
+0        Kyiv  166421  156611   9810   0.191316  0.941053   0.058947
+1     Donetsk  158606  139602  19004   0.182332  0.880181   0.119819
+2  Simferopol  124155   95477  28678   0.142727  0.769015   0.230985
+3     Luhansk   66803   52987  13816   0.076796  0.793183   0.206817
+4    Mykolaiv   53001   51796   1205   0.060929  0.977265   0.022735
+2025-08-23 01:05:40,602 - INFO - Completed model: region-total.sql
+2025-08-23 01:05:40,748 - DEBUG - Model region-weaponcategory-total.sql: 178 rows
+2025-08-23 01:05:40,772 - DEBUG - Preview:
+     region  weaponcategory  total  local_rank  country_rank  total_log100  total_region  total_country
+0  Cherkasy       Artillery    184           4           104      1.132409          4653         869875
+1  Cherkasy          Bladed     25           6           147      0.698970          4653         869875
+2  Cherkasy        Handguns   2248           1            40      1.675898          4653         869875
+3  Cherkasy  Heavy firearms    196           3           100      1.146128          4653         869875
+4  Cherkasy  Light firearms   1957           2            45      1.645795          4653         869875
+2025-08-23 01:05:40,850 - INFO - Completed model: region-weaponcategory-total.sql
+2025-08-23 01:05:40,959 - DEBUG - Model region-year-total.sql: 854 rows
+2025-08-23 01:05:41,053 - DEBUG - Preview:
+     region       date  loss  theft  total  loss_pct  theft_pct  total_pct
+0  Cherkasy 1991-12-31     0      4      4  0.000000   1.000000   0.000005
+1  Cherkasy 1992-12-31     3      4      7  0.428571   0.571429   0.000008
+2  Cherkasy 1993-12-31     0     18     18  0.000000   1.000000   0.000021
+3  Cherkasy 1994-12-31     4     20     24  0.166667   0.833333   0.000028
+4  Cherkasy 1995-12-31     8     27     35  0.228571   0.771429   0.000040
+2025-08-23 01:05:41,147 - INFO - Completed model: region-year-total.sql
+2025-08-23 01:05:41,147 - DEBUG - Model report-total.sql: 2 rows
+2025-08-23 01:05:41,160 - DEBUG - Preview:
+  report   total
+0   Loss  755714
+1  Theft  114161
+2025-08-23 01:05:41,166 - INFO - Completed model: report-total.sql
+2025-08-23 01:05:41,175 - DEBUG - Model weaponcategory-total.sql: 8 rows
+2025-08-23 01:05:41,189 - DEBUG - Preview:
+   weaponcategory   total    loss  theft
+0  Light firearms  532949  484928  48021
+1        Handguns  270559  211200  59359
+2       Artillery   26324   24437   1887
+3  Heavy firearms   23825   21803   2022
+4          Bladed    8213    7844    369
+2025-08-23 01:05:41,262 - INFO - Completed model: weaponcategory-total.sql
+2025-08-23 01:05:41,266 - INFO - Materialization successfully completed!

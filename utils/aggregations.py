@@ -15,7 +15,7 @@ def current_total_records(info: str) -> tuple:
     clr_outlier = "#e54848"
     clr_font = "#dedede"
     
-    date_report_total = pd.read_parquet("assets/models/date-report-total.parquet.gzip")
+    date_report_total = pd.read_parquet("data/marts/date-report-total.parquet").astype({"report":"str"})
     
     if info == "total":
         
