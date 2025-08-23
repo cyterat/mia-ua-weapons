@@ -3,7 +3,7 @@ name: Update Data
 on: 
   workflow_dispatch:
   schedule:
-    - cron: '51 7 * * *'
+    - cron: '53 10 * * *'
 
 jobs:
   download-json:
