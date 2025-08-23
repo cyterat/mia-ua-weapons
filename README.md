@@ -24,14 +24,25 @@
 ## 🚧Latest Changes
 
 Restructure pipeline for performance and maintainability
+
 - Split monolithic 400+ line pipeline into modular ETL structure
-- Replace pandas with polars for 4+ minute processing optimization
+
+- Replace pandas with polars for processing optimization:
+    - __Processing time reduced by ~90%__ >>> ~~300 sec~~ > 30 sec 
+
 - Separate data extraction/transformation from SQL-based analytical modeling
-- Create materialization layer with SQL templates and DuckDB execution replacing 30+ sec modeling process
+
+- Create modeling (materialization) layer with SQL templates and DuckDB execution:
+    - __Processing time reduced by ~75%__ >>> ~~40 sec~~ > 10 sec
+
 - Move from print() to proper logging with YAML configuration
+
 - Organize data into structured marts/models/raw/processed directories
+
 - Update CI workflows and app paths for new architecture
+
+The entire data updating pipeline now runs approximately __6x faster__ than its previous implementation, i.e. __processing time reduced by ~83%__ >>> ~~6 min~~ > 1 min.
   
 ## 🛠 Libraries
 
-Polars, DuckDB, Pandas, NumPy, Matplotlib, Plotly, Streamlit
+Polars, DuckDB, PyYAML, Pandas, NumPy, Matplotlib, Plotly, Streamlit
