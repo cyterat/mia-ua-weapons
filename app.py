@@ -58,7 +58,7 @@ date_report_total = pd.read_parquet("data/marts/date-report-total.parquet").asty
 # population = pd.read_csv("data/raw/ua-population.csv").iloc[:,[0,-2,-1]]
 
 # File modification year
-current_date = modification_date("data/raw/weapons-wanted.json","date")
+current_date = modification_date("data/marts/region-total.parquet","date")
 
 
 # ====================#
@@ -293,7 +293,7 @@ with st.spinner("Please wait a few seconds while I prepare everything...🔥"):
     
     with sec4_col2:
         
-        year = st.selectbox(label='', options=np.arange(1991, int(modification_date("data/raw/weapons-wanted.json",'year'))+1, 1), label_visibility='hidden')
+        year = st.selectbox(label='', options=np.arange(1991, int(modification_date("data/marts/region-total.parquet",'year'))+1, 1), label_visibility='hidden')
     
         generate_reports_piechart(year)
         
