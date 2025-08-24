@@ -42,6 +42,10 @@ Restructure pipeline for performance and maintainability
 - Update CI workflows and app paths for new architecture
 
 The entire data updating pipeline now runs approximately __6x faster__ than its previous implementation, i.e. __processing time reduced by ~83%__ >>> ~~6 min~~ > 1 min.
+
+<sub>*Data Pipeline Architecture*<sub>
+
+![](assets/mia-ua-weapons-data-pipeline-architecture.png)
   
 ## 🛠 Libraries
 
