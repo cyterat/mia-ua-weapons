@@ -13,7 +13,7 @@
 
 <sub>*Visualization Example*<sub>
 
-![](assets/2024-02-Lost-and-Stolen-Weapons-in-Ukraine-Streamlit.png)
+![](src/assets/2024-02-Lost-and-Stolen-Weapons-in-Ukraine-Streamlit.png)
 
 ## 💾Data
 
@@ -45,7 +45,7 @@ The entire data updating pipeline now runs approximately __6x faster__ than its 
 
 <sub>*Data Pipeline Architecture*<sub>
 
-![](assets/mia-ua-weapons-data-pipeline-architecture.png)
+![](src/assets/mia-ua-weapons-data-pipeline-architecture.png)
   
 ## 🛠 Libraries
 

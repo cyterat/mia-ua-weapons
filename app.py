@@ -2,18 +2,18 @@ import streamlit as st
 import pandas as pd
 import numpy as np
 
-from elements import generate_events_barchart
-from elements import generate_reports_scatterplot
-from elements import generate_reports_piechart
-from elements import generate_weapons_scatterplot
-from elements import generate_region_total_table
-from elements import generate_weaponcategory_total_table
-from elements import generate_rank_region_population
-from elements import generate_region_total_linechart
-from elements import generate_region_weapons_polarchart
-from elements import generate_region_report_10y_linechart
-from utils import modification_date  
-from utils import current_total_records  
+from src.visualizations import generate_events_barchart
+from src.visualizations import generate_reports_scatterplot
+from src.visualizations import generate_reports_piechart
+from src.visualizations import generate_weapons_scatterplot
+from src.visualizations import generate_region_total_table
+from src.visualizations import generate_weaponcategory_total_table
+from src.visualizations import generate_rank_region_population
+from src.visualizations import generate_region_total_linechart
+from src.visualizations import generate_region_weapons_polarchart
+from src.visualizations import generate_region_report_10y_linechart
+from src.utils import modification_date  
+from src.utils import current_total_records  
 
 
 # ========================#
@@ -26,7 +26,7 @@ st.set_page_config(
     )
 
 # Style
-with open('style.css') as f:
+with open('src/assets/style.css') as f:
     st.markdown(
         f"<style>{f.read()}</style>",
         unsafe_allow_html=True
